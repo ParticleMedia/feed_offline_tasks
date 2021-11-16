@@ -1,0 +1,59 @@
+import sys
+import json
+import traceback
+import time
+
+sys.path.insert(0, '')
+
+PIVOT_DAYS = 3
+
+def process(docData, pivot):
+    if '_id' not in docData:
+        return None
+
+    # disable index
+    if docData.get('disable_index', False):
+        return None
+
+    # staleness
+    epoch = docData.get('epoch', -1)
+    if epoch < pivot:
+        return None
+
+    if 'Obituary' in docData.get('text_category', {}).get('first_cat', {}):
+        return None
+
+    # local news
+    isLocalNews = docData.get('local_score', 0.0) > 0.5
+    if isLocalNews:
+        return None
+
+    filtededDoc = {
+        'docid': docData['_id'],
+        'domain': docData.get('domain', ''),
+        'media_id': docData.get('media_id', -1),
+        'src': docData.get('source', ''),
+        'channels': docData.get('channels', []),
+        'sc_channels': docData.get('sc_channels', []),
+        'tpc_s': docData.get('tpc_s', {}),
+        'tpc_m': docData.get('tpc_m', {}),
+        'text_category': docData.get('text_category', []),
+        'ts': docData.get('ts_task', -1),
+    }
+    return filtededDoc
+
+if __name__ == "__main__":
+    pivot = time.time() - 3600 * 24 * PIVOT_DAYS
+    for line in sys.stdin:
+        line = line.strip()
+
+        splits = line.split('\t')
+        if len(splits) < 2:
+            continue
+
+        docData = json.loads(splits[1])
+        out = process(docData, pivot)
+        if out:
+            docid = out['docid']
+            print '%s\t%s' % (docid, json.dumps(out))
+

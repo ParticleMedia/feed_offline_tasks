@@ -1,0 +1,236 @@
+#!/bin/bash
+set -x
+
+function check_env()
+{
+    if [ -z $HADOOP_BIN ]; then
+        echo "conf: HADOOP_BIN is needed!"
+        return 1
+    fi
+    if [ -z $HDFS_WORK_PATH ]; then
+        echo "conf: HDFS_WORK_PATH is needed!"
+        return 1
+    fi
+    if [ -z $HDFS_TMP_PATH ]; then
+        echo "conf: HDFS_TMP_PATH is needed!"
+        return 1
+    fi
+    if [ -z $LOCAL_BIN_PATH ]; then
+        echo "conf: LOCAL_BIN_PATH is needed!"
+        return 1
+    fi
+
+    return 0
+}
+
+function run_mapred() {
+    bash ${LOCAL_BIN_PATH}/run_mapred.sh $@
+    return $?
+}
+
+function post_body() {
+    local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
+    local data_file=${index_dir}/merged_data.txt
+    local postbody_file=${index_dir}/postbody.txt
+    local feature_file=${index_dir}/feature.txt
+    cat ${data_file} | python ${LOCAL_BIN_PATH}/extractDocprofile.py ${postbody_file} ${feature_file}
+}
+
+function fetch_embedding() {
+    local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
+    local postbody_file=${index_dir}/postbody.txt
+    local nfs_tf_dir=/mnt/models/kerasmodels
+    cat ${postbody_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding.txt --embedding_path_exp=${index_dir}/embedding_exp.txt --user_version_path=${nfs_tf_dir}/userv2_current_version --user_version_path_exp=${nfs_tf_dir}/mindexpuser_current_version --doc_version_path=${nfs_tf_dir}/docv2_current_version --doc_version_path_exp=${nfs_tf_dir}/mindexpdoc_current_version --error_rate_path=${index_dir}/error_rate.txt --error_rate_path_exp=${index_dir}/error_rate_exp.txt
+
+    ret=$?
+    return ${ret}
+}
+
+function flush_nfs() {
+    local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
+    local nfs_foryou_dir=/mnt/models/foryou
+    local nfs_tf_dir=/mnt/models/kerasmodels
+
+    cp ${index_dir}/embedding.txt ${nfs_foryou_dir}/dssm_embedding.txt
+    cp ${index_dir}/embedding_exp.txt ${nfs_foryou_dir}/dssm_embedding_exp.txt
+    cp ${nfs_tf_dir}/docv2_current_version ${nfs_tf_dir}/userv2_current_version
+    cp ${nfs_tf_dir}/docv2_current_version ${index_dir}/docv2_current_version
+    cp ${nfs_tf_dir}/mindexpdoc_current_version ${nfs_tf_dir}/mindexpuser_current_version
+    cp ${nfs_tf_dir}/mindexpdoc_current_version ${index_dir}/mindexpdoc_current_version
+
+    ret=$?
+    return ${ret}
+}
+
+function check_error_rate() {
+    local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
+    local error_rate=$(head -1 ${index_dir}/error_rate.txt)
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        echo "read error rate file fail!"
+        return ${ret}
+    fi
+
+    local error_rate_exp=$(head -1 ${index_dir}/error_rate_exp.txt)
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        echo "read error rate exp file fail!"
+        return ${ret}
+    fi
+
+    alert=`echo "$error_rate > 2.0" | bc`
+    if [ $alert -eq 1 ]; then
+        echo "error rate is greater than 2 percent!"
+        ret=3
+    fi
+
+    alert=`echo "$error_rate_exp > 2.0" | bc`
+    if [ $alert -eq 1 ]; then
+        echo "error rate exp is greater than 2 percent!"
+        ret=4
+    fi
+
+    return ${ret}
+}
+
+function build_annoy() {
+    # build annoy index
+    local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
+    local embedding_file=${index_dir}/embedding.txt
+    cat ${embedding_file} | ${LOCAL_BIN_PATH}/indexer --dimension=32 --tree=64 --prefix=${index_dir}/docs
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        return ${ret}
+    fi
+
+    local embedding_exp_file=${index_dir}/embedding_exp.txt
+    cat ${embedding_exp_file} | ${LOCAL_BIN_PATH}/indexer --dimension=32 --tree=64 --prefix=${index_dir}/docs_exp
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        return ${ret}
+    fi
+    return ${ret}
+}
+
+function select_docs() {
+    local select_hours=72
+    local doc_dir=${LOCAL_DATA_PATH}/docs
+    local out_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
+    local file_list=""
+    for ((i=1;i<=${select_hours};++i)); do
+        local datehourflag=`date +%Y%m%d%H -d "-${i} hours"`
+        local filepath=${doc_dir}/${datehourflag}
+        if [ -d ${filepath} ]; then
+            file_list="${file_list} ${filepath}/part-*"
+        fi
+    done
+
+    mkdir -p ${out_dir}
+    rm -rf ${out_dir}/*
+    local data_file=${out_dir}/merged_data.txt
+    cat ${file_list} | sort | python ${LOCAL_BIN_PATH}/merge_doc.py >${data_file}
+}
+
+function process() {
+    local module_conf=$1
+    local ret=0
+
+    # write your own logic here
+    local filter_doc_conf=${LOCAL_CONF_PATH}/filter_doc.conf
+    run_mapred ${module_conf} ${filter_doc_conf}
+    ret=$?
+    if [ ${ret} -ne  0 ]; then
+        return ${ret}
+    fi
+
+    select_docs
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        return ${ret}
+    fi
+
+    post_body
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        return ${ret}
+    fi
+
+    fetch_embedding
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        return ${ret}
+    fi
+
+    build_annoy
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        return ${ret}
+    fi
+
+    if [ "x${PUSH_INDEX}" == "xTRUE" ]; then
+        local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
+        local push_timestamp=`date +%s`
+        bash -x ${LOCAL_BIN_PATH}/push.sh dssm ${index_dir}
+        ret=$?
+        if [ ${ret} -ne 0 ]; then
+            return ${ret}
+        fi
+        echo "push index" >&2
+
+        bash -x ${LOCAL_BIN_PATH}/push_exp.sh dssm_exp ${index_dir}
+        ret=$?
+        if [ ${ret} -ne 0 ]; then
+            return ${ret}
+        fi
+        echo "push exp index" >&2
+    fi
+
+    flush_nfs
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        return ${ret}
+    fi
+
+    check_error_rate
+    ret=$?
+    return ${ret}
+}
+
+if [ $# -lt 1 ]; then
+    echo "usage: "$0" MODULE_CONF [RUN_DATE]"
+    exit 1
+fi
+module_conf_file=$1
+RUN_DATE=$2
+source $module_conf_file
+
+# date flag
+if [ -z "${DATE_FLAG}" ]; then
+    DATE_FLAG=`date +"%Y%m%d"`
+fi
+
+if [ -n "${RUN_DATE}" ]; then
+    DATE_FLAG=${RUN_DATE}
+fi
+
+check_env 1>&2
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
+timestamp=`date +%Y%m%d%H%M%S`
+
+process ${module_conf_file}
+ret=$?
+if [ ${ret} -ne 0 ]; then
+    echo "process failed. ret[${ret}]" 1>&2
+    exit ${ret}
+fi
+
+if [ -n "${LOG_CLEANUP_DATE}" -a -n "${LOG_CLEANUP_HOUR}" ]; then
+    rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR}* &>/dev/null
+    rm -rf ${LOCAL_DATA_PATH}/index/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    #${HADOOP_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/*/${LOG_CLEANUP_DATE}/${LOG_CLEANUP_HOUR} &>/dev/null
+fi
+exit ${ret}
