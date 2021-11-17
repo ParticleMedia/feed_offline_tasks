@@ -1,1 +1,0 @@
-insert overwrite directory 's3a://pm-hdfs2/user/wangcong/user_tct_ctr_push/cjv/20211115' row format delimited fields terminated by ',' SELECT cjv.doc_id, cjv.user_id, unix_timestamp(cjv.trigger_ts), if(cjv.clicked is null, 0, cjv.clicked) FROM push_metrics.offline_push_cjv as cjv WHERE cjv.pdate = '2021-11-15' and cjv.source LIKE 'local%';
