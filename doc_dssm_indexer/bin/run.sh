@@ -32,17 +32,19 @@ function post_body() {
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
     local postbody_file=${index_dir}/postbody.txt
     local postbody_exp_file=${index_dir}/postbody_exp.txt
+    local postbody_file_filter=${index_dir}/postbody_filter.txt
+    local postbody_exp_file_filter=${index_dir}/postbody_exp_filter.txt
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
 
     mkdir -p ${index_dir}
     rm -rf ${index_dir}/*
-    python ${LOCAL_BIN_PATH}/extractDocprofile.py ${postbody_file} ${postbody_exp_file} ${docprofile_dir}
+    python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file} ${postbody_exp_file} ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
 }
 
 function fetch_embedding() {
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
-    local postbody_file=${index_dir}/postbody.txt
-    local postbody_exp_file=${index_dir}/postbody_exp.txt
+    local postbody_file=${index_dir}/postbody_filter.txt
+    local postbody_exp_file=${index_dir}/postbody_exp_filter.txt
     local nfs_tf_dir=/mnt/models/kerasmodels
     cat ${postbody_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding.txt --user_version_path=${nfs_tf_dir}/userv2_current_version --doc_version_path=${nfs_tf_dir}/docv2_current_version --error_rate_path=${index_dir}/error_rate.txt
     cat ${postbody_exp_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding_exp.txt --user_version_path=${nfs_tf_dir}/mindexpuser_current_version --doc_version_path=${nfs_tf_dir}/mindexpdoc_current_version --error_rate_path=${index_dir}/error_rate_exp.txt --is_exp=true
