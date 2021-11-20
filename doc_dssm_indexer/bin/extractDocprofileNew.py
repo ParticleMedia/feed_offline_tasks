@@ -110,7 +110,7 @@ def profileJsonToTrainItem(doc_obj, filename = "", isExp = False, isFilter = Fal
         total_view += doc_obj["cfb_3d"]["view"]
         total_click += doc_obj["cfb_3d"]["click"]
     
-    if isFilter and total_click <= 2:
+    if isFilter and total_click < 5:
         return "", {}
 
     if isExp:
