@@ -4,3 +4,9 @@
 */out
 */part-*
 */bin/*.sql
+*/bin/write_tool
+*/bin/write_redis_tool
+offline_ctr_dumper/bin/cluster_topchn
+offline_ctr_dumper/bin/doc_city_ctr
+offline_ctr_dumper/bin/doc_relevance
+offline_ctr_dumper/bin/offline_ctr_dumper
