@@ -114,6 +114,13 @@ function category_topdoc() {
     return ${ret}
 }
 
+function nonnews_category_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/nonnews_category_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    local ret=$?
+    return ${ret}
+}
+
 function category_topdoc_v2() {
     local topdoc_conf=${LOCAL_CONF_PATH}/category_topdoc_v2.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
@@ -585,6 +592,7 @@ function process() {
     # topdocs for 1d
     evergreen_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/evergreen_topdoc_1d.log.${timestamp} &
     category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_topdoc_1d.log.${timestamp} &
+    nonnews_category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_1d.log.${timestamp} &
     #video_category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/video_cat_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/chn_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 0 true &>${LOCAL_LOG_PATH}/chnv2_topdoc_1d.log.${timestamp} &
