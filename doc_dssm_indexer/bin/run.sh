@@ -30,15 +30,16 @@ function run_mapred() {
 
 function post_body() {
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
-    local postbody_file=${index_dir}/postbody.txt
-    local postbody_exp_file=${index_dir}/postbody_exp.txt
+    #local postbody_file=${index_dir}/postbody.txt
+    #local postbody_exp_file=${index_dir}/postbody_exp.txt
     local postbody_file_filter=${index_dir}/postbody_filter.txt
     local postbody_exp_file_filter=${index_dir}/postbody_exp_filter.txt
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
 
     mkdir -p ${index_dir}
     rm -rf ${index_dir}/*
-    python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file} ${postbody_exp_file} ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
+    #python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file} ${postbody_exp_file} ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
+    python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
 }
 
 function fetch_embedding() {
@@ -148,7 +149,7 @@ function get_docprofiles() {
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
     mkdir -p ${docprofile_dir}
     rm -rf ${docprofile_dir}/*
-    split -l 30000 ${all_docid_file} ${split_docid_file}
+    split -l 60000 ${all_docid_file} ${split_docid_file}
 
     for docid_file in ${split_docid_file}*; do
         cat ${docid_file} | python ${LOCAL_BIN_PATH}/downloadDoc.py ${docprofile_dir} &
@@ -270,6 +271,7 @@ if [ -n "${LOG_CLEANUP_DATE}" -a -n "${LOG_CLEANUP_HOUR}" ]; then
     rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR}* &>/dev/null
     rm -rf ${LOCAL_DATA_PATH}/index/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
     rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    rm -rf ${LOCAL_DATA_PATH}/docprofiles/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
     #${HADOOP_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/*/${LOG_CLEANUP_DATE}/${LOG_CLEANUP_HOUR} &>/dev/null
 fi
 exit ${ret}

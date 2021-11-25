@@ -194,14 +194,17 @@ def toTfservingJson(item, isExp):
     return ret
 
 if __name__ == "__main__":
-    post_file = sys.argv[1]
-    post_exp_file = sys.argv[2]
-    post_file_filter = sys.argv[3]
-    post_exp_file_filter = sys.argv[4]
-    json_dir = sys.argv[5]
+    #post_file = sys.argv[1]
+    #post_exp_file = sys.argv[2]
+    #post_file_filter = sys.argv[3]
+    #post_exp_file_filter = sys.argv[4]
+    #json_dir = sys.argv[5]
+    post_file_filter = sys.argv[1]
+    post_exp_file_filter = sys.argv[2]
+    json_dir = sys.argv[3]
 
-    f_post = open(post_file, "a")
-    f_post_exp = open(post_exp_file, "a")
+    #f_post = open(post_file, "a")
+    #f_post_exp = open(post_exp_file, "a")
     f_post_filter = open(post_file_filter, "a")
     f_post_exp_filter = open(post_exp_file_filter, "a")
 
@@ -209,13 +212,13 @@ if __name__ == "__main__":
         for f in files:
             filename = os.path.join(root, f)
             doc_obj = readjson(filename)
-            docid, item = profileJsonToTrainItem(doc_obj, filename, False)
-            if docid != "":
-                f_post.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, False))))
+            #docid, item = profileJsonToTrainItem(doc_obj, filename, False)
+            #if docid != "":
+            #    f_post.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, False))))
 
-            docid, item = profileJsonToTrainItem(doc_obj, filename, True)
-            if docid != "":
-                f_post_exp.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, True))))
+            #docid, item = profileJsonToTrainItem(doc_obj, filename, True)
+            #if docid != "":
+            #    f_post_exp.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, True))))
 
             # filter
             docid, item = profileJsonToTrainItem(doc_obj, filename, False, True)
@@ -226,8 +229,8 @@ if __name__ == "__main__":
             if docid != "":
                 f_post_exp_filter.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, True))))
 
-    f_post.close()
-    f_post_exp.close()
+    #f_post.close()
+    #f_post_exp.close()
     f_post_filter.close()
     f_post_exp_filter.close()    
 
