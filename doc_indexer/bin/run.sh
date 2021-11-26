@@ -47,9 +47,15 @@ function watch_hdfs_file() {
         if [ $? -eq 0 ]; then
             return 0
         fi
-        sleep 5m
+        sleep 1m
     done
     return 1
+}
+
+function wait_cpp_data(){
+    cpp_path=s3a://hdfs.bak/us/user/hive/warehouse/stage.db/cpp/document/pdate=${DOC_DATE_FLAG}/phour=${HOUR_FLAG}/_SUCCESS
+    watch_hdfs_file ${cpp_path} 10
+    return $?
 }
 
 function build_annoy() {
@@ -88,6 +94,12 @@ function process() {
     local ret=0
 
     # write your own logic here
+    wait_cpp_data
+    ret=$?
+    if [ ${ret} -ne  0 ]; then
+        return ${ret}
+    fi
+
     local filter_doc_conf=${LOCAL_CONF_PATH}/filter_doc.conf
     run_mapred ${module_conf} ${filter_doc_conf}
     ret=$?

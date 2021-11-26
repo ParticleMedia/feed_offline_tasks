@@ -23,8 +23,28 @@ function check_env()
     return 0
 }
 
+function watch_hdfs_file() {
+    local path=$1
+    local checktimes=$2
+
+    for ((i=0; i<${checktimes}; i++)); do
+        ${HADOOP_BIN} dfs -test -f ${path}
+        if [ $? -eq 0 ]; then
+            return 0
+        fi
+        sleep 1m
+    done
+    return 1
+}
+
 function run_mapred() {
     bash ${LOCAL_BIN_PATH}/run_mapred.sh $@
+    return $?
+}
+
+function wait_cpp_data(){
+    cpp_path=s3a://hdfs.bak/us/user/hive/warehouse/stage.db/cpp/document/pdate=${DOC_DATE_FLAG}/phour=${HOUR_FLAG}/_SUCCESS
+    watch_hdfs_file ${cpp_path} 10
     return $?
 }
 
@@ -149,7 +169,7 @@ function get_docprofiles() {
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
     mkdir -p ${docprofile_dir}
     rm -rf ${docprofile_dir}/*
-    split -l 60000 ${all_docid_file} ${split_docid_file}
+    split -l 30000 ${all_docid_file} ${split_docid_file}
 
     for docid_file in ${split_docid_file}*; do
         cat ${docid_file} | python ${LOCAL_BIN_PATH}/downloadDoc.py ${docprofile_dir} &
@@ -170,6 +190,12 @@ function process() {
     local ret=0
 
     # write your own logic here
+    wait_cpp_data
+    ret=$?
+    if [ ${ret} -ne  0 ]; then
+        return ${ret}
+    fi
+
     local filter_doc_conf=${LOCAL_CONF_PATH}/filter_doc.conf
     run_mapred ${module_conf} ${filter_doc_conf}
     ret=$?
