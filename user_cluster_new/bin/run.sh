@@ -78,7 +78,7 @@ function do_cluster() {
 
     local local_cluster_dir=${LOCAL_DATA_PATH}/cluster/${DATE_FLAG}
     mkdir -p ${local_cluster_dir}; rm -rf ${local_cluster_dir}/* &>/dev/null
-    cat ${local_embedding_dir}/part-* | ${LOCAL_BIN_PATH}/user_cluster -min-total-click=20 -cluster-count=10 -dimension=50 -iteration=300 -try=3 -sample=30 >${local_cluster_dir}/user_cluster.txt
+    cat ${local_embedding_dir}/part-* | ${LOCAL_BIN_PATH}/user_cluster -min-total-click=10 -cluster-count=300 -dimension=50 -iteration=300 -try=2 -sample=30 >${local_cluster_dir}/user_cluster_300.txt
     ret=$?
     if [ ${ret} -ne 0 ]; then
         return ${ret}
@@ -114,7 +114,7 @@ function process() {
 
     # do cluster
     local hdfs_embedding_dir=`output_of ${merge_embedding_conf}`
-    #do_cluster ${hdfs_embedding_dir}
+    # do_cluster ${hdfs_embedding_dir}
     ret=$?
     if [ ${ret} -ne 0 ]; then
         return ${ret}

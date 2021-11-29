@@ -3,7 +3,7 @@ date_str=20200923
 cluster_cnt=30
 try_cnt=3
 
-hdfs_embedding_dir=s3a://pm-hdfs2/user/wangcong/user_cluster/merge_embedding/${date_str}
+hdfs_embedding_dir=s3a://pm-hdfs2/user/qihengda/user_cluster/merge_embedding/${date_str}
 local_embedding_dir=../data/embedding/${date_str}
 local_cluster_dir=../data/cluster/${date_str}
 

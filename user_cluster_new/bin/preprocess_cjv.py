@@ -23,7 +23,7 @@ def filter_cjv(item):
     if condition.startswith('local') or condition.startswith('state'):
         return False
     srcName = item.get('nr_view', {}).get('src_channel_name', '')
-    if srcName == 'foryou':
+    if srcName != 'foryou':
         return False
     return True
 
