@@ -128,20 +128,6 @@ function category_topdoc_v2() {
     return ${ret}
 }
 
-function video_category_topdoc() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/video_category_topdoc.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
-function evergreen_topdoc() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/evergreen_topdoc.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
 function chn_topdoc() {
     local module_conf=$1
     local select_hour=$2
@@ -184,53 +170,12 @@ function nonnews_chn_topdoc() {
     fi
 }
 
-function tpcm_topvideo() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/tpcm_topvideo.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
 function user_cluster_topdoc() {
     local topdoc_conf=${LOCAL_CONF_PATH}/user_cluster_topdoc.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
     #local ret=$?
     #return ${ret}
     return 0
-}
-
-function user_cluster_topvideo() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/user_cluster_topvideo.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
-function user_cluster_topauthor() {
-    local select_hour=$2
-    local postfix=$3
-    local drop=$5
-    if [ "x"${drop}  == "x0" ]; then
-        drop=""
-    fi
-
-    local topdoc_conf=${LOCAL_CONF_PATH}/user_cluster_topauthor.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    if [ ${ret} -ne  0 ]; then
-        return ${ret}
-    fi
-
-    if [ "x"${WRITE_TO_REDIS} == "xTRUE" ]; then
-        # release to nfs
-        local topdoc_dir=`(export __SELECT_HOURS__=${select_hour}; export __POSTFIX__=${postfix}; export __DROP__=${drop}; local_output_of ${topdoc_conf})`
-        local nfs_file_dir=${NFS_VIDEO_PATH}
-        local nfs_file_name=user_cluster_topauthor_${postfix}${drop}.txt
-        mkdir -p ${nfs_file_dir}
-        cp -f ${topdoc_dir}/part-00000 ${nfs_file_dir}/${nfs_file_name}
-        ret=$?
-    fi
-    return ${ret}
 }
 
 function user_cluster_topchn() {
@@ -279,13 +224,6 @@ function user_cluster_topchn() {
 function tab_ctr() {
     local tab_ctr_conf=${LOCAL_CONF_PATH}/tab_ctr.conf
     run_mapred_and_write_redis ${tab_ctr_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
-function video_outer_ctr() {
-    local video_ctr_conf=${LOCAL_CONF_PATH}/video_outer_ctr.conf
-    run_mapred_and_write_redis ${video_ctr_conf} $@
     local ret=$?
     return ${ret}
 }
@@ -519,13 +457,6 @@ function chn_clustered_ctr() {
     return ${ret}
 }
 
-function video_author_clustered_ctr() {
-    local ctr_conf=${LOCAL_CONF_PATH}/video_author_clustered_ctr.conf
-    run_mapred_and_write_redis ${ctr_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
 function local_ctr() {
     local ctr_conf=${LOCAL_CONF_PATH}/local_ctr.conf
     run_mapred_and_write_redis ${ctr_conf} $@
@@ -599,17 +530,12 @@ function process() {
 
     # select_hours redis_key_postfix redis_expire
     # topdocs for 1d
-    evergreen_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/evergreen_topdoc_1d.log.${timestamp} &
     category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_topdoc_1d.log.${timestamp} &
     nonnews_category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_1d.log.${timestamp} &
-    #video_category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/video_cat_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/chn_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 0 true &>${LOCAL_LOG_PATH}/chnv2_topdoc_1d.log.${timestamp} &
-    #tpcm_topvideo ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/tpcm_topvideo_1d.log.${timestamp} &
     #local_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/local_topdoc_1d.log.${timestamp} &
     user_cluster_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_1d.log.${timestamp} &
-    #user_cluster_topvideo ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topvideo_1d.log.${timestamp} &
-    #user_cluster_topauthor ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topauthor_1d.log.${timestamp} &
     poi_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/poi_topdoc_1d.log.${timestamp} &
 
     # ctrs for 1d
@@ -617,9 +543,7 @@ function process() {
     local_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/local_ctr_1d.log.${timestamp} &
     grouped_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/grouped_ctr_1d.log.${timestamp} &
     clustered_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/clustered_ctr_1d.log.${timestamp} &
-    #video_author_clustered_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/video_author_clustered_ctr_1d.log.${timestamp} &
     tab_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/tab_ctr_1d.log.${timestamp} &
-    video_outer_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/video_outer_ctr_1d.log.${timestamp} &
 
     # ctrs for 2d
     if ((10#${HOUR_FLAG} % 2 == 0)); then
@@ -629,23 +553,19 @@ function process() {
     # ctrs for 3d
     if ((10#${HOUR_FLAG} % 3 == 0)); then
         category_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/cat_ctr_3d.log.${timestamp} &
-        video_outer_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/video_outer_ctr_3d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 3 == 1)); then
         grouped_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/grouped_ctr_3d.log.${timestamp} &
         #local_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/local_ctr_3d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 3 == 2)); then
         clustered_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/clustered_ctr_3d.log.${timestamp} &
-        #video_author_clustered_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/video_author_clustered_ctr_3d.log.${timestamp} &
     fi
 
     # ctrs and topchns and factors for 7d
     if ((10#${HOUR_FLAG} % 6 == 1)); then
         chn_clustered_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/chn_clustered_ctr_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 2)); then
-        #video_author_clustered_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/video_author_clustered_ctr_7d.log.${timestamp} &
         nonnews_category_topdoc ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_7d.log.${timestamp} &
         nonnews_chn_topdoc ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/nonnews_chn_topdoc_7d.log.${timestamp} &
-        video_outer_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/video_outer_ctr_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 3)); then
         local_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/local_ctr_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 5)); then
@@ -677,13 +597,6 @@ function process() {
         return ${ret}
     fi
 
-    return ${ret}
-}
-
-function evergreen_category_topdoc() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/evergreen_category_topdoc.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
     return ${ret}
 }
 
