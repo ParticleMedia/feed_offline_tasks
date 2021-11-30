@@ -178,49 +178,6 @@ function user_cluster_topdoc() {
     return 0
 }
 
-function user_cluster_topchn() {
-    local module_conf=$1
-    local select_hour=$2
-    local postfix=$3
-    local expire=$4
-    local drop=$5
-    local use_chn_v2=""
-    if [ $# -ge 6 ]; then
-        use_chn_v2=$6
-    fi
-    if [ "x"${drop}  == "x0" ]; then
-        drop=""
-    fi
-
-    local ret=0
-    local topdoc_conf=${LOCAL_CONF_PATH}/user_cluster_topchn.conf
-    (export __SELECT_HOURS__=${select_hour}; export __POSTFIX__=${postfix}; export __DROP__=${drop}; export __USE_CHN_V2__=${use_chn_v2}; run_mapred ${module_conf} ${topdoc_conf})
-    ret=$?
-    if [ ${ret} -ne  0 ]; then
-        return ${ret}
-    fi
-
-    if [ "x"${WRITE_TO_REDIS} == "xTRUE" ]; then
-        local topdoc_dir=`(export __SELECT_HOURS__=${select_hour}; export __POSTFIX__=${postfix}; export __DROP__=${drop}; export __USE_CHN_V2__=${use_chn_v2}; local_output_of ${topdoc_conf})`
-        #write_to_redis ${topdoc_dir} ${expire}
-        ret=$?
-        if [ ${ret} -ne  0 ]; then
-            return ${ret}
-        fi
-
-        # release to nfs
-        local nfs_file_dir=${NFS_FORYOU_PATH}
-        local nfs_file_name=user_cluster_topchn_${postfix}${drop}.txt
-        if [ "x"${use_chn_v2} == "xtrue" ]; then
-            nfs_file_name=user_cluster_topchn_v2_${postfix}${drop}.txt
-        fi
-        mkdir -p ${nfs_file_dir}
-        cp -f ${topdoc_dir}/part-00000 ${nfs_file_dir}/${nfs_file_name}
-        ret=$?
-    fi
-    return ${ret}
-}
-
 function tab_ctr() {
     local tab_ctr_conf=${LOCAL_CONF_PATH}/tab_ctr.conf
     run_mapred_and_write_redis ${tab_ctr_conf} $@
