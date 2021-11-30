@@ -641,10 +641,10 @@ function process() {
     # ctrs and topchns and factors for 7d
     if ((10#${HOUR_FLAG} % 6 == 1)); then
         chn_clustered_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/chn_clustered_ctr_7d.log.${timestamp} &
-        nonnews_category_topdoc ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_7d.log.${timestamp} &
-        nonnews_chn_topdoc ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/nonnews_chn_topdoc_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 2)); then
         #video_author_clustered_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/video_author_clustered_ctr_7d.log.${timestamp} &
+        nonnews_category_topdoc ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_7d.log.${timestamp} &
+        nonnews_chn_topdoc ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/nonnews_chn_topdoc_7d.log.${timestamp} &
         video_outer_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/video_outer_ctr_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 3)); then
         local_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/local_ctr_7d.log.${timestamp} &
