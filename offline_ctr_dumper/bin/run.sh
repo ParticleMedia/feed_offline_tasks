@@ -228,13 +228,6 @@ function tab_ctr() {
     return ${ret}
 }
 
-function local_topdoc() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/local_topdoc.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
 function poi_topdoc() {
     local topdoc_conf=${LOCAL_CONF_PATH}/poi_topdoc.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
@@ -534,7 +527,6 @@ function process() {
     nonnews_category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/chn_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 0 true &>${LOCAL_LOG_PATH}/chnv2_topdoc_1d.log.${timestamp} &
-    #local_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/local_topdoc_1d.log.${timestamp} &
     user_cluster_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_1d.log.${timestamp} &
     poi_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/poi_topdoc_1d.log.${timestamp} &
 
