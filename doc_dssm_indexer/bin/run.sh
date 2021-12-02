@@ -243,12 +243,16 @@ function process() {
         fi
         echo "push index" >&2
 
+        cat ${index_dir}/docs.map | cut -f 1 | ${LOCAL_BIN_PATH}/trace_writer -host=172.31.20.243 -port=9750 -event=dssm.index -ts=${push_timestamp} -batch=100 1>/dev/null
+
         bash -x ${LOCAL_BIN_PATH}/push_exp.sh dssm_exp ${index_dir}
         ret=$?
         if [ ${ret} -ne 0 ]; then
             return ${ret}
         fi
         echo "push exp index" >&2
+
+        cat ${index_dir}/docs_exp.map | cut -f 1 | ${LOCAL_BIN_PATH}/trace_writer -host=172.31.20.243 -port=9750 -event=dssm_exp.index -ts=${push_timestamp} -batch=100 1>/dev/null
     fi
 
     flush_nfs
