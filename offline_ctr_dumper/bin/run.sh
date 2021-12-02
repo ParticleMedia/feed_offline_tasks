@@ -414,53 +414,6 @@ function local_ctr() {
     return ${ret}
 }
 
-function chn2chn_ctr_factor() {
-    local module_conf=$1
-    local select_hour=$2
-    local postfix=$3
-    local expire=$4
-    local drop=$5
-    local use_chn_v2=false
-    if [ $# -ge 6 ]; then
-        use_chn_v2=$6
-    fi
-    if [ "x"${drop}  == "x0" ]; then
-        drop=""
-    fi
-
-    local ctr_factor_conf=${LOCAL_CONF_PATH}/chn2chn_ctr_factor.conf
-    (export __SELECT_HOURS__=${select_hour}; export __POSTFIX__=${postfix}; export __DROP__=${drop}; export __USE_CHN_V2__=${use_chn_v2}; run_mapred ${module_conf} ${ctr_factor_conf})
-    ret=$?
-    if [ ${ret} -ne  0 ]; then
-        return ${ret}
-    fi
-
-    if [ "x"${WRITE_TO_REDIS} == "xTRUE" ]; then
-        local ctr_factor_dir=`(export __SELECT_HOURS__=${select_hour}; export __POSTFIX__=${postfix}; export __DROP__=${drop}; export __USE_CHN_V2__=${use_chn_v2}; local_output_of ${ctr_factor_conf})`
-        ret=$?
-        if [ ${ret} -ne  0 ]; then
-            return ${ret}
-        fi
-
-        # release to nfs
-        local nfs_file_dir=${NFS_FORYOU_PATH}
-        local nfs_file_name=chn2chn_ctr_factor_${postfix}${drop}.txt
-        if [ "x"${use_chn_v2} == "xtrue" ]; then
-            nfs_file_name=chn2chn_v2_ctr_factor_${postfix}${drop}.txt
-        fi
-        local tmp_file_path=${ctr_factor_dir}/tmp
-        mkdir -p ${nfs_file_dir}
-        cat ${ctr_factor_dir}/part-* >${tmp_file_path}; cp -f ${tmp_file_path} ${nfs_file_dir}/${nfs_file_name}
-        ret=$?
-        if [ ${ret} -ne  0 ]; then
-            return ${ret}
-        fi
-        rm -f ${tmp_file_path} &>/dev/null
-        ret=$?
-    fi
-    return ${ret}
-}
-
 function process() {
     local module_conf=$1
     local timestamp=`date +"%Y%m%d%H%M%S"`
