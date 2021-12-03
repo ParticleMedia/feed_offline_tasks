@@ -54,7 +54,7 @@ function watch_hdfs_file() {
 
 function wait_cpp_data(){
     cpp_path=s3a://hdfs.bak/us/user/hive/warehouse/stage.db/cpp/document/pdate=${DOC_DATE_FLAG}/phour=${HOUR_FLAG}/_SUCCESS
-    watch_hdfs_file ${cpp_path} 10
+    watch_hdfs_file ${cpp_path} 30
     return $?
 }
 
