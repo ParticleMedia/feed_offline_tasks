@@ -121,6 +121,13 @@ function nonnews_category_topdoc() {
     return ${ret}
 }
 
+function flavour_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/flavour_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    local ret=$?
+    return ${ret}
+}
+
 function category_topdoc_v2() {
     local topdoc_conf=${LOCAL_CONF_PATH}/category_topdoc_v2.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
@@ -439,6 +446,7 @@ function process() {
     chn_topdoc ${module_conf} 24 1d 7200 0 true &>${LOCAL_LOG_PATH}/chnv2_topdoc_1d.log.${timestamp} &
     user_cluster_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_1d.log.${timestamp} &
     poi_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/poi_topdoc_1d.log.${timestamp} &
+    flavour_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/flavour_topdoc_1d.log.${timestamp} &
 
     # ctrs for 1d
     category_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_ctr_1d.log.${timestamp} &
