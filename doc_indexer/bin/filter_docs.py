@@ -44,14 +44,8 @@ if __name__ == "__main__":
     for line in sys.stdin:
         line = line.strip()
 
-        splits = line.split('\t')
-        if len(splits) < 2:
-            sys.stderr.write('invalid line: %s\n' % line)
-            hadoop_counter.increase_counter('doc', 'invalid_line')
-            continue
-
         try:
-            docData = json.loads(splits[1])
+            docData = json.loads(line)
             out = process(docData, pivot)
             if out is None:
                 hadoop_counter.increase_counter('doc', 'filtered')
@@ -64,5 +58,4 @@ if __name__ == "__main__":
             sys.stderr.write('load doc json failed: %s\n' % line)
             hadoop_counter.increase_counter('doc', 'invalid_json')
     hadoop_counter.print_counter()
-        
 
