@@ -48,11 +48,7 @@ if __name__ == "__main__":
     for line in sys.stdin:
         line = line.strip()
 
-        splits = line.split('\t')
-        if len(splits) < 2:
-            continue
-
-        docData = json.loads(splits[1])
+        docData = json.loads(line)
         if isValid(docData, pivot, block_mids):
             print docData['_id']
 

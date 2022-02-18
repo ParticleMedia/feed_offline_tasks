@@ -43,7 +43,7 @@ function run_mapred() {
 }
 
 function wait_cpp_data(){
-    cpp_path=s3a://hdfs.bak/us/user/hive/warehouse/stage.db/cpp/document/pdate=${DOC_DATE_FLAG}/phour=${HOUR_FLAG}/_SUCCESS
+    cpp_path=s3a://cpp-us-pmi/cpp_documents/pdate=${DOC_DATE_FLAG}/phour=${HOUR_FLAG}/_SUCCESS
     watch_hdfs_file ${cpp_path} 50
     return $?
 }
@@ -190,11 +190,11 @@ function process() {
     local ret=0
 
     # write your own logic here
-    wait_cpp_data
-    ret=$?
-    if [ ${ret} -ne  0 ]; then
-        return ${ret}
-    fi
+    #wait_cpp_data
+    #ret=$?
+    #if [ ${ret} -ne  0 ]; then
+    #    return ${ret}
+    #fi
 
     local filter_doc_conf=${LOCAL_CONF_PATH}/filter_doc.conf
     run_mapred ${module_conf} ${filter_doc_conf}
