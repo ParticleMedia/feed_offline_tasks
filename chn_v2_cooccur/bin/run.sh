@@ -200,7 +200,7 @@ function cal_cooccur() {
     fi
 
     line_count=`wc -l ${LOCAL_DATA_PATH}/cooccur/${DATE_FLAG}/part-00000 | cut -d' ' -f1 `
-    if [ ${line_count} -lt 10000 ]; then
+    if [ ${line_count} -lt 1000 ]; then
         return 1
     fi
     cp ${LOCAL_DATA_PATH}/cooccur/${DATE_FLAG}/part-00000 /mnt/models/foryou/chn_2_chn_v2.txt

@@ -1,4 +1,5 @@
 *.tar.gz
+*.log
 */log
 */data
 */tmp
