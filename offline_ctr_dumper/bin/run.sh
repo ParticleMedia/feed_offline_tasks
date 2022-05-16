@@ -121,6 +121,13 @@ function nonnews_category_topdoc() {
     return ${ret}
 }
 
+function nonnews_category_cfb_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/nonnews_category_cfb_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    local ret=$?
+    return ${ret}
+}
+
 function flavour_topdoc() {
     local topdoc_conf=${LOCAL_CONF_PATH}/flavour_topdoc.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
@@ -177,8 +184,49 @@ function nonnews_chn_topdoc() {
     fi
 }
 
+function nonnews_chn_cfb_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/nonnews_chn_cfb_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    local ret=$?
+    if [ ${ret} -ne  0 ]; then
+        return ${ret}
+    fi
+}
+
 function user_cluster_topdoc() {
     local topdoc_conf=${LOCAL_CONF_PATH}/user_cluster_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
+function zip_nl_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/zip_nl_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
+function city_nl_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/city_nl_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
+function dma_nl_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/dma_nl_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
+function state_nl_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/state_nl_topdoc.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
     #local ret=$?
     #return ${ret}
@@ -447,6 +495,12 @@ function process() {
     user_cluster_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_1d.log.${timestamp} &
     poi_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/poi_topdoc_1d.log.${timestamp} &
     flavour_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/flavour_topdoc_1d.log.${timestamp} &
+    zip_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/zip_nl_topdoc_1d.log.${timestamp} &
+    city_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_topdoc_1d.log.${timestamp} &
+    dma_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/dma_nl_topdoc_1d.log.${timestamp} &
+    state_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_topdoc_1d.log.${timestamp} &
+    nonnews_category_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_1d.log.${timestamp} &
+    nonnews_chn_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_1d.log.${timestamp} &
 
     # ctrs for 1d
     category_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_ctr_1d.log.${timestamp} &
@@ -478,6 +532,9 @@ function process() {
         nonnews_chn_topdoc ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/nonnews_chn_topdoc_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 3)); then
         local_ctr ${module_conf} 168 7d 43200 &>${LOCAL_LOG_PATH}/local_ctr_7d.log.${timestamp} &
+    elif ((10#${HOUR_FLAG} % 6 == 4)); then
+        nonnews_category_cfb_topdoc ${module_conf} 168 7d 86400 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_7d.log.${timestamp} &
+        nonnews_chn_cfb_topdoc ${module_conf} 168 7d 86400 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 5)); then
         chn_clustered_ctr ${module_conf} 168 7d 43200 0 true &>${LOCAL_LOG_PATH}/chnv2_clustered_ctr_7d.log.${timestamp} &
     fi
@@ -490,6 +547,10 @@ function process() {
     # ctr for 30d
     if ((10#${HOUR_FLAG} % 24 == 7)); then
         category_ctr ${module_conf} 720 30d 216000 &>${LOCAL_LOG_PATH}/cat_ctr_30d.log.${timestamp} &
+    elif ((10#${HOUR_FLAG} % 24 == 8)); then
+        nonnews_category_cfb_topdoc ${module_conf} 720 30d 86400 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
+    elif ((10#${HOUR_FLAG} % 24 == 9)); then
+        nonnews_chn_cfb_topdoc ${module_conf} 720 30d 86400 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
     fi
 
     if [ "x"${HOUR_FLAG} == "x00" ]; then
