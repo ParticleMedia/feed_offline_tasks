@@ -545,12 +545,12 @@ function process() {
     fi
 
     # ctr for 30d
-    if ((10#${HOUR_FLAG} % 24 == 7)); then
-        category_ctr ${module_conf} 720 30d 216000 &>${LOCAL_LOG_PATH}/cat_ctr_30d.log.${timestamp} &
-    elif ((10#${HOUR_FLAG} % 24 == 8)); then
-        nonnews_category_cfb_topdoc ${module_conf} 720 30d 86400 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
-    elif ((10#${HOUR_FLAG} % 24 == 9)); then
-        nonnews_chn_cfb_topdoc ${module_conf} 720 30d 86400 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
+    if ((10#${HOUR_FLAG} % 24 == 3)); then
+        nonnews_category_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
+    elif ((10#${HOUR_FLAG} % 24 == 4)); then
+        nonnews_chn_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
+    elif ((10#${HOUR_FLAG} % 24 == 7)); then
+        category_ctr ${module_conf} 720 30d 216000 &>${LOCAL_LOG_PATH}/cat_ctr_30d.log.${timestamp} &    
     fi
 
     if [ "x"${HOUR_FLAG} == "x00" ]; then
