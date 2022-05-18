@@ -539,18 +539,13 @@ function process() {
         chn_clustered_ctr ${module_conf} 168 7d 43200 0 true &>${LOCAL_LOG_PATH}/chnv2_clustered_ctr_7d.log.${timestamp} &
     fi
 
-    # ctr for 14d
-    if ((10#${HOUR_FLAG} % 6 == 9)); then
-        category_ctr ${module_conf} 336 14d 86400 &>${LOCAL_LOG_PATH}/cat_ctr_14d.log.${timestamp} &
-    fi
-
     # ctr for 30d
     if ((10#${HOUR_FLAG} % 24 == 3)); then
         nonnews_category_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 4)); then
         nonnews_chn_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 7)); then
-        category_ctr ${module_conf} 720 30d 216000 &>${LOCAL_LOG_PATH}/cat_ctr_30d.log.${timestamp} &    
+        category_ctr ${module_conf} 720 30d 216000 &>${LOCAL_LOG_PATH}/cat_ctr_30d.log.${timestamp} &
     fi
 
     if [ "x"${HOUR_FLAG} == "x00" ]; then
