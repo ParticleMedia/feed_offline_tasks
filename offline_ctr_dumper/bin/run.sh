@@ -233,6 +233,22 @@ function state_nl_topdoc() {
     return 0
 }
 
+function city_nl_hotdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/city_nl_hotdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
+function state_nl_hotdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/state_nl_hotdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
 function tab_ctr() {
     local tab_ctr_conf=${LOCAL_CONF_PATH}/tab_ctr.conf
     run_mapred_and_write_redis ${tab_ctr_conf} $@
@@ -501,6 +517,8 @@ function process() {
     state_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_topdoc_1d.log.${timestamp} &
     nonnews_category_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_1d.log.${timestamp} &
     nonnews_chn_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_1d.log.${timestamp} &
+    city_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_hotdoc_1d.log.${timestamp} &
+    state_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_hotdoc_1d.log.${timestamp} &
 
     # ctrs for 1d
     category_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_ctr_1d.log.${timestamp} &
