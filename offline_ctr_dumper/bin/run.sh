@@ -128,20 +128,6 @@ function nonnews_category_cfb_topdoc() {
     return ${ret}
 }
 
-function flavour_topdoc() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/flavour_topdoc.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
-function category_topdoc_v2() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/category_topdoc_v2.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
 function chn_topdoc() {
     local module_conf=$1
     local select_hour=$2
@@ -252,13 +238,6 @@ function state_nl_hotdoc() {
 function tab_ctr() {
     local tab_ctr_conf=${LOCAL_CONF_PATH}/tab_ctr.conf
     run_mapred_and_write_redis ${tab_ctr_conf} $@
-    local ret=$?
-    return ${ret}
-}
-
-function poi_topdoc() {
-    local topdoc_conf=${LOCAL_CONF_PATH}/poi_topdoc.conf
-    run_mapred_and_write_redis ${topdoc_conf} $@
     local ret=$?
     return ${ret}
 }
@@ -507,18 +486,15 @@ function process() {
     category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_topdoc_1d.log.${timestamp} &
     nonnews_category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/chn_topdoc_1d.log.${timestamp} &
-    chn_topdoc ${module_conf} 24 1d 7200 0 true &>${LOCAL_LOG_PATH}/chnv2_topdoc_1d.log.${timestamp} &
     user_cluster_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_1d.log.${timestamp} &
-    poi_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/poi_topdoc_1d.log.${timestamp} &
-    flavour_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/flavour_topdoc_1d.log.${timestamp} &
-    zip_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/zip_nl_topdoc_1d.log.${timestamp} &
+    #zip_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/zip_nl_topdoc_1d.log.${timestamp} &
     city_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_topdoc_1d.log.${timestamp} &
     dma_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/dma_nl_topdoc_1d.log.${timestamp} &
     state_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_topdoc_1d.log.${timestamp} &
     nonnews_category_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_1d.log.${timestamp} &
     nonnews_chn_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_1d.log.${timestamp} &
-    city_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_hotdoc_1d.log.${timestamp} &
-    state_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_hotdoc_1d.log.${timestamp} &
+    #city_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_hotdoc_1d.log.${timestamp} &
+    #state_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_hotdoc_1d.log.${timestamp} &
 
     # ctrs for 1d
     category_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_ctr_1d.log.${timestamp} &
@@ -564,10 +540,6 @@ function process() {
         nonnews_chn_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 7)); then
         category_ctr ${module_conf} 720 30d 216000 &>${LOCAL_LOG_PATH}/cat_ctr_30d.log.${timestamp} &
-    fi
-
-    if [ "x"${HOUR_FLAG} == "x00" ]; then
-        category_topdoc_v2 ${module_conf} 24 1d 129600 &>${LOCAL_LOG_PATH}/category_topdoc_v2_1d.log.${timestamp} &
     fi
 
     for pid in $(jobs -p); do
