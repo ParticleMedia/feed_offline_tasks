@@ -187,6 +187,14 @@ function user_cluster_topdoc() {
     return 0
 }
 
+function user_cluster_topdoc_v2() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/user_cluster_topdoc_v2.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
 function zip_nl_topdoc() {
     local topdoc_conf=${LOCAL_CONF_PATH}/zip_nl_topdoc.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
@@ -487,6 +495,7 @@ function process() {
     nonnews_category_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_topdoc_1d.log.${timestamp} &
     chn_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/chn_topdoc_1d.log.${timestamp} &
     user_cluster_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_1d.log.${timestamp} &
+    user_cluster_topdoc_v2 ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_v2_1d.log.${timestamp} &
     #zip_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/zip_nl_topdoc_1d.log.${timestamp} &
     city_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_topdoc_1d.log.${timestamp} &
     dma_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/dma_nl_topdoc_1d.log.${timestamp} &
