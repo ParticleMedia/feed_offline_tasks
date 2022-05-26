@@ -22,7 +22,7 @@ function check_env()
     return 0
 }
 
-function check_mapred_conf() 
+function check_mapred_conf()
 {
     if [ -z $MAPRED_JOB_NAME ]; then
         echo "conf: MAPRED_JOB_NAME is needed!"
@@ -118,7 +118,7 @@ function run_mapred()
     local input_path=${MAPRED_INPUT_PATH}
     local output_path=${MAPRED_OUTPUT_PATH}
     #local tmp_output_path=${MAPRED_TMP_PATH}/${MAPRED_JOB_NAME}_${timestamp}
-    
+
     local cache_archives=`gen_cache_archieves`
     local cache_files=`gen_cache_files`
     local upload_files=`gen_upload_files`
@@ -171,7 +171,7 @@ function run_mapred()
             return ${check_ret}
         fi
     fi
-    
+
     if [ -n "${COPY_TO_LOCAL}" ]; then
         copy_to_local ${output_path} ${COPY_TO_LOCAL}
         local copy_ret=$?
@@ -180,7 +180,7 @@ function run_mapred()
         fi
         ${HDFS_BIN} dfs -rmr -skipTrash ${output_path} &>/dev/null
     fi
-    
+
     if [ "x${REMOVE_INPUT}" = "xTRUE" ]; then
         remove_input ${input_path}
     fi
@@ -196,18 +196,18 @@ function remove_input()
     done
 }
 
-function copy_to_local() 
+function copy_to_local()
 {
     local hdfs_path=$1
     local local_path=$2
-    
+
     rm -rf ${local_path}/* &>/dev/null
     mkdir -p ${local_path}
     ${HDFS_BIN} dfs -copyToLocal ${hdfs_path}/* ${local_path}
     return $?
 }
 
-function check_result_size() 
+function check_result_size()
 {
     local hdfs_path=$1
     local part_count=`${HDFS_BIN} dfs -ls ${hdfs_path}/part-* | grep "part-" | wc -l`
@@ -217,7 +217,7 @@ function check_result_size()
     local ret=`${HDFS_BIN} dfs -ls ${hdfs_path}/part-* | awk 'NF>5{print $5}' | grep "^0$" | wc -l`
     return ${ret}
 }
-    
+
 if [ $# -lt 2 ]; then
     echo "usage: "$0" MODULE_CONF DISTCP_CONF [RUN_DATE]"
     exit 1

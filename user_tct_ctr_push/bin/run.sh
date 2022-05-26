@@ -96,10 +96,8 @@ function write_to_ups() {
 
 function dump_cjv_from_hive() {
     local hdfs_cjv_path=${HDFS_WORK_PATH}/cjv/${DATE_FLAG}
-    local hive_sql="SELECT cjv.doc_id, cjv.user_id, unix_timestamp(cjv.trigger_ts), if(cjv.clicked is null, 0, cjv.clicked) FROM push_metrics.offline_push_cjv as cjv WHERE cjv.pdate = '${CJV_DATE_FLAG}' and cjv.source LIKE 'local%'"
-    #local hdfs_cjv_path=${HDFS_WORK_PATH}/cjv/history
-    #local hive_sql="SELECT cjv.doc_id, cjv.user_id, unix_timestamp(cjv.trigger_ts), if(cjv.clicked is null, 0, cjv.clicked) FROM push_metrics.offline_push_cjv as cjv WHERE cjv.pdate >= '2019-12-01' and cjv.pdate < '2019-12-27' and cjv.source LIKE 'local%'"
-    
+    local hive_sql="SELECT cjv.doc_id, cjv.user_id, unix_timestamp(cjv.trigger_ts), if(cjv.clicked is null, 0, cjv.clicked) FROM mds.mds_push_cjv_pst_daily as cjv WHERE cjv.pdate = '${CJV_DATE_FLAG}' and cjv.source LIKE 'local%'"
+
     local sql_file=${LOCAL_BIN_PATH}/hive.sql
     local hive_cmd="insert overwrite directory '${hdfs_cjv_path}' row format delimited fields terminated by ',' ${hive_sql};"
     echo ${hive_cmd} >${sql_file}
