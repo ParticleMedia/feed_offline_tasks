@@ -179,6 +179,14 @@ function nonnews_chn_cfb_topdoc() {
     fi
 }
 
+function nonnews_user_cluster_topdoc() {
+    local topdoc_conf=${LOCAL_CONF_PATH}/nonnews_user_cluster_topdoc.conf
+    run_mapred_and_write_redis ${topdoc_conf} $@
+    #local ret=$?
+    #return ${ret}
+    return 0
+}
+
 function user_cluster_topdoc() {
     local topdoc_conf=${LOCAL_CONF_PATH}/user_cluster_topdoc.conf
     run_mapred_and_write_redis ${topdoc_conf} $@
@@ -502,6 +510,7 @@ function process() {
     state_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_topdoc_1d.log.${timestamp} &
     nonnews_category_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_1d.log.${timestamp} &
     nonnews_chn_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_1d.log.${timestamp} &
+    nonnews_user_cluster_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_1d.log.${timestamp} &
     #city_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_hotdoc_1d.log.${timestamp} &
     #state_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_hotdoc_1d.log.${timestamp} &
 
@@ -539,6 +548,7 @@ function process() {
         nonnews_category_cfb_topdoc ${module_conf} 168 7d 86400 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_7d.log.${timestamp} &
         nonnews_chn_cfb_topdoc ${module_conf} 168 7d 86400 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_7d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 6 == 5)); then
+        nonnews_user_cluster_topdoc ${module_conf} 168 7d 86400 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_7d.log.${timestamp} &
         chn_clustered_ctr ${module_conf} 168 7d 43200 0 true &>${LOCAL_LOG_PATH}/chnv2_clustered_ctr_7d.log.${timestamp} &
     fi
 
@@ -547,8 +557,6 @@ function process() {
         nonnews_category_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 4)); then
         nonnews_chn_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
-    elif ((10#${HOUR_FLAG} % 24 == 7)); then
-        category_ctr ${module_conf} 720 30d 216000 &>${LOCAL_LOG_PATH}/cat_ctr_30d.log.${timestamp} &
     fi
 
     for pid in $(jobs -p); do
