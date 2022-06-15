@@ -52,24 +52,20 @@ function post_body() {
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
     #local postbody_file=${index_dir}/postbody.txt
     #local postbody_exp_file=${index_dir}/postbody_exp.txt
-    local postbody_file_filter=${index_dir}/postbody_filter.txt
-    local postbody_exp_file_filter=${index_dir}/postbody_exp_filter.txt
+    local postbody_file_filter=${index_dir}/postbody_filter_${index_name}.txt
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
 
     mkdir -p ${index_dir}
     rm -rf ${index_dir}/*
     #python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file} ${postbody_exp_file} ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
-    python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
+    python ${LOCAL_BIN_PATH}/extractDocprofileNew.py "" ${postbody_file_filter} ${docprofile_dir}
 }
 
 function fetch_embedding() {
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
-    local postbody_file=${index_dir}/postbody_filter.txt
-    local postbody_exp_file=${index_dir}/postbody_exp_filter.txt
+    local postbody_file=${index_dir}/postbody_filter_${index_name}.txt
     local nfs_tf_dir=/mnt/models/kerasmodels
-    cat ${postbody_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding.txt --user_version_path=${nfs_tf_dir}/userv2_current_version --doc_version_path=${nfs_tf_dir}/docv2_current_version --error_rate_path=${index_dir}/error_rate.txt
-    cat ${postbody_exp_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding_exp.txt --user_version_path=${nfs_tf_dir}/mindexpuser_current_version --doc_version_path=${nfs_tf_dir}/mindexpdoc_current_version --error_rate_path=${index_dir}/error_rate_exp.txt --is_exp=true
-
+    cat ${postbody_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding_${index_name}.txt --user_version_path=${nfs_tf_dir}/user_${index_name}_current_version --doc_version_path=${nfs_tf_dir}/doc_${index_name}_current_version --error_rate_path=${index_dir}/error_rate_${index_name}.txt --is_exp=true
     ret=$?
     return ${ret}
 }
@@ -79,15 +75,10 @@ function flush_nfs() {
     local nfs_foryou_dir=/mnt/models/foryou
     local nfs_tf_dir=/mnt/models/kerasmodels
 
-    cp ${index_dir}/embedding.txt ${nfs_foryou_dir}/dssm_embedding.txt
-    cp ${index_dir}/embedding_exp.txt ${nfs_foryou_dir}/dssm_embedding_exp.txt
-    # add on 20211111, for dssm-i2i exp
-    cp ${index_dir}/docs.map ${nfs_foryou_dir}/dssm_docs.map
-    cp ${index_dir}/docs_exp.map ${nfs_foryou_dir}/dssm_docs_exp.map
-    cp ${nfs_tf_dir}/docv2_current_version ${nfs_tf_dir}/userv2_current_version
-    cp ${nfs_tf_dir}/docv2_current_version ${index_dir}/docv2_current_version
-    cp ${nfs_tf_dir}/mindexpdoc_current_version ${nfs_tf_dir}/mindexpuser_current_version
-    cp ${nfs_tf_dir}/mindexpdoc_current_version ${index_dir}/mindexpdoc_current_version
+    cp ${index_dir}/embedding_${index_name}.txt ${nfs_foryou_dir}/embedding_${index_name}.txt
+    cp ${index_dir}/${index_name}_docs.map ${nfs_foryou_dir}/${index_name}_dssm_docs.map
+    cp ${nfs_tf_dir}/doc_${index_name}_current_version ${nfs_tf_dir}/doc_${index_name}_current_version
+    cp ${nfs_tf_dir}/doc_${index_name}_current_version ${nfs_tf_dir}/user_${index_name}_current_version
 
     ret=$?
     return ${ret}
@@ -127,15 +118,8 @@ function check_error_rate() {
 function build_annoy() {
     # build annoy index
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
-    local embedding_file=${index_dir}/embedding.txt
-    cat ${embedding_file} | ${LOCAL_BIN_PATH}/indexer --dimension=32 --tree=64 --prefix=${index_dir}/docs
-    ret=$?
-    if [ ${ret} -ne 0 ]; then
-        return ${ret}
-    fi
-
-    local embedding_exp_file=${index_dir}/embedding_exp.txt
-    cat ${embedding_exp_file} | ${LOCAL_BIN_PATH}/indexer --dimension=32 --tree=64 --prefix=${index_dir}/docs_exp
+    local embedding_file=${index_dir}/embedding_${index_name}.txt
+    cat ${embedding_file} | ${LOCAL_BIN_PATH}/indexer --dimension=32 --tree=64 --prefix=${index_dir}/${index_name}_docs
     ret=$?
     if [ ${ret} -ne 0 ]; then
         return ${ret}
@@ -144,7 +128,7 @@ function build_annoy() {
 }
 
 function select_docs() {
-    local select_hours=72
+    local select_hours=2160 # 90d
     local doc_dir=${LOCAL_DATA_PATH}/docs
     local docid_dir=${LOCAL_DATA_PATH}/docids/${DATE_FLAG}${HOUR_FLAG}
     local file_list=""
@@ -236,23 +220,14 @@ function process() {
     if [ "x${PUSH_INDEX}" == "xTRUE" ]; then
         local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
         local push_timestamp=`date +%s`
-        bash -x ${LOCAL_BIN_PATH}/push.sh dssm ${index_dir}
+        bash -x ${LOCAL_BIN_PATH}/push.sh $index_name ${index_dir}
         ret=$?
         if [ ${ret} -ne 0 ]; then
             return ${ret}
         fi
-        echo "push index" >&2
+        echo "push $index_name" >&2
 
-        cat ${index_dir}/docs.map | cut -f 1 | ${LOCAL_BIN_PATH}/trace_writer -host=172.31.20.243 -port=9750 -event=dssm.index -ts=${push_timestamp} -batch=100 1>/dev/null
-
-        bash -x ${LOCAL_BIN_PATH}/push_exp.sh dssm_exp ${index_dir}
-        ret=$?
-        if [ ${ret} -ne 0 ]; then
-            return ${ret}
-        fi
-        echo "push exp index" >&2
-
-        cat ${index_dir}/docs_exp.map | cut -f 1 | ${LOCAL_BIN_PATH}/trace_writer -host=172.31.20.243 -port=9750 -event=dssm_exp.index -ts=${push_timestamp} -batch=100 1>/dev/null
+        cat ${index_dir}/${index_name}_docs.map | cut -f 1 | ${LOCAL_BIN_PATH}/trace_writer -host=172.31.20.243 -port=9750 -event=${index_name}.index -ts=${push_timestamp} -batch=100 1>/dev/null
     fi
 
     flush_nfs
@@ -283,6 +258,8 @@ if [ -n "${RUN_DATE}" ]; then
     DATE_FLAG=${RUN_DATE}
 fi
 
+index_name=dssm_all_video
+
 check_env 1>&2
 if [ $? -ne 0 ]; then
     exit 1
@@ -300,7 +277,7 @@ fi
 if [ -n "${LOG_CLEANUP_DATE}" -a -n "${LOG_CLEANUP_HOUR}" ]; then
     rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR}* &>/dev/null
     rm -rf ${LOCAL_DATA_PATH}/index/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DOCS_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
     rm -rf ${LOCAL_DATA_PATH}/docprofiles/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
     #${HADOOP_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/*/${LOG_CLEANUP_DATE}/${LOG_CLEANUP_HOUR} &>/dev/null
 fi

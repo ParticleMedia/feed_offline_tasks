@@ -66,6 +66,10 @@ def profileJsonToTrainItem(doc_obj, filename = "", isExp = False, isFilter = Fal
     if ("local_score" in static_obj and float(static_obj["local_score"]) > 0.5) and ("geotag" in static_obj and len(static_obj["geotag"]) > 0):
         return "", {}
 
+    # filtered if published 7 days ago and not nonnews
+    if static_obj.get('epoch', 0) < int(time.time()) - 86400 * 7 and static_obj.get('is_news_score', 1.) > 0.5:
+        return "", {}
+
     d_chns = tolower(static_obj["channels"]) if "channels" in static_obj else []
     raw_d_cats = []
     if "text_category" in static_obj:
@@ -205,8 +209,8 @@ if __name__ == "__main__":
 
     #f_post = open(post_file, "a")
     #f_post_exp = open(post_exp_file, "a")
-    f_post_filter = open(post_file_filter, "a")
-    f_post_exp_filter = open(post_exp_file_filter, "a")
+    f_post_filter = open(post_file_filter, "a") if post_file_filter else None
+    f_post_exp_filter = open(post_exp_file_filter, "a") if post_exp_file_filter else None
 
     for root, dirs, files in os.walk(json_dir):
         for f in files:
@@ -221,16 +225,20 @@ if __name__ == "__main__":
             #    f_post_exp.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, True))))
 
             # filter
-            docid, item = profileJsonToTrainItem(doc_obj, filename, False, True)
-            if docid != "":
-                f_post_filter.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, False))))
+            if f_post_filter:
+                docid, item = profileJsonToTrainItem(doc_obj, filename, False, True)
+                if docid != "":
+                    f_post_filter.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, False))))
 
-            docid, item = profileJsonToTrainItem(doc_obj, filename, True, True)
-            if docid != "":
-                f_post_exp_filter.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, True))))
+            if f_post_exp_filter:
+                docid, item = profileJsonToTrainItem(doc_obj, filename, True, True)
+                if docid != "":
+                    f_post_exp_filter.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, True))))
 
     #f_post.close()
     #f_post_exp.close()
-    f_post_filter.close()
-    f_post_exp_filter.close()    
+    if f_post_filter:
+        f_post_filter.close()
+    if f_post_exp_filter:
+        f_post_exp_filter.close()
 

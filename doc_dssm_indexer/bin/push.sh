@@ -24,8 +24,8 @@ index_name=$1
 index_dir=$2
 version=`date +"%Y%m%d%H%M%S"`
 
-ANN_INDEX_FILE=${index_dir}/docs.ann
-MAPPING_FILE=${index_dir}/docs.map
+ANN_INDEX_FILE=${index_dir}/${index_name}_docs.ann
+MAPPING_FILE=${index_dir}/${index_name}_docs.map
 SPEC_FILE=${index_dir}/${index_name}.spec
 
 if [ ! -f ${ANN_INDEX_FILE} -o ! -f ${MAPPING_FILE} ]; then
@@ -34,6 +34,7 @@ fi
 
 dest_dir=${DEST_DATA_DIR}/${index_name}/${version}
 ${SCRIPT_ROOT}/spec_tool -dir="../data/${index_name}/${version}" -scorer=distance -dimension=32 -cache_size=${CACHE_SIZE} >${SPEC_FILE}
+${SCRIPT_ROOT}/spec_tool -dir="../data/${index_name}/${version}" -ann_file=`basename $ANN_INDEX_FILE` -mapping_file=`basename $MAPPING_FILE` -scorer=distance -dimension=32 -cache_size=${CACHE_SIZE} >${SPEC_FILE}
 if [ $? -ne 0 ]; then
     exit 1
 fi
