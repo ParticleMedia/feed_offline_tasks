@@ -76,7 +76,7 @@ function flush_nfs() {
     cp ${index_dir}/embedding_${index_name}.txt ${nfs_foryou_dir}/embedding_${index_name}.txt
     cp ${index_dir}/${index_name}_docs.map ${nfs_foryou_dir}/${index_name}_dssm_docs.map
     cp ${nfs_tf_dir}/doc_${index_name}_current_version ${nfs_tf_dir}/doc_${index_name}_current_version
-    cp ${nfs_tf_dir}/doc_${index_name}_current_version ${nfs_tf_dir}/user_${index_name}_current_version
+    cp ${nfs_tf_dir}/doc_${index_name}_current_version ${index_dir}/doc_${index_name}_current_version
 
     ret=$?
     return ${ret}
