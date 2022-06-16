@@ -50,8 +50,6 @@ function wait_cpp_data(){
 
 function post_body() {
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
-    #local postbody_file=${index_dir}/postbody.txt
-    #local postbody_exp_file=${index_dir}/postbody_exp.txt
     local postbody_file_filter=${index_dir}/postbody_filter_${index_name}.txt
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
 
@@ -86,17 +84,10 @@ function flush_nfs() {
 
 function check_error_rate() {
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}${HOUR_FLAG}
-    local error_rate=$(head -1 ${index_dir}/error_rate.txt)
+    local error_rate=$(head -1 ${index_dir}/error_rate_${index_name}.txt)
     ret=$?
     if [ ${ret} -ne 0 ]; then
         echo "read error rate file fail!"
-        return ${ret}
-    fi
-
-    local error_rate_exp=$(head -1 ${index_dir}/error_rate_exp.txt)
-    ret=$?
-    if [ ${ret} -ne 0 ]; then
-        echo "read error rate exp file fail!"
         return ${ret}
     fi
 
@@ -105,13 +96,6 @@ function check_error_rate() {
         echo "error rate is greater than 2 percent!"
         ret=3
     fi
-
-    alert=`echo "$error_rate_exp > 2.0" | bc`
-    if [ $alert -eq 1 ]; then
-        echo "error rate exp is greater than 2 percent!"
-        ret=4
-    fi
-
     return ${ret}
 }
 
