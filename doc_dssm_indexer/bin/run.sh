@@ -251,7 +251,12 @@ fi
 
 timestamp=`date +%Y%m%d%H%M%S`
 
+ts_start=`date +%s`
 process ${module_conf_file}
+ts_end=`date +%s`
+
+echo "started at `date -d @$ts_start`, finished at `date -d @$ts_end`, cost $((ts_end-ts_start)) seconds"
+
 ret=$?
 if [ ${ret} -ne 0 ]; then
     echo "process failed. ret[${ret}]" 1>&2
