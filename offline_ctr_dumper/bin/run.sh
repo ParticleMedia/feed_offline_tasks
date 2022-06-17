@@ -506,7 +506,7 @@ function process() {
     user_cluster_topdoc_v2 ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/user_cluster_topdoc_v2_1d.log.${timestamp} &
     #zip_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/zip_nl_topdoc_1d.log.${timestamp} &
     city_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_topdoc_1d.log.${timestamp} &
-    dma_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/dma_nl_topdoc_1d.log.${timestamp} &
+    #dma_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/dma_nl_topdoc_1d.log.${timestamp} &
     state_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_topdoc_1d.log.${timestamp} &
     nonnews_category_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_1d.log.${timestamp} &
     nonnews_chn_cfb_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_1d.log.${timestamp} &
@@ -553,10 +553,10 @@ function process() {
     fi
 
     # ctr for 30d
-    if ((10#${HOUR_FLAG} % 24 == 3)); then
-        nonnews_category_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
-    elif ((10#${HOUR_FLAG} % 24 == 4)); then
+    if ((10#${HOUR_FLAG} % 24 == 5)); then
         nonnews_chn_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
+    elif ((10#${HOUR_FLAG} % 24 == 3)); then
+        nonnews_category_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
     fi
 
     for pid in $(jobs -p); do
