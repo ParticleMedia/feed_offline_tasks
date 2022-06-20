@@ -232,12 +232,12 @@ if __name__ == "__main__":
 
             # filter
             if f_post_filter:
-                docid, item = profileJsonToTrainItem(doc_obj, filename, False, True)
+                docid, item = profileJsonToTrainItem(doc_obj, filename, False, False)
                 if docid != "":
                     f_post_filter.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, False))))
 
             if f_post_exp_filter:
-                docid, item = profileJsonToTrainItem(doc_obj, filename, True, True)
+                docid, item = profileJsonToTrainItem(doc_obj, filename, True, False)
                 if docid != "":
                     f_post_exp_filter.write("%s\t%s\n" % (docid, json.dumps(toTfservingJson(item, True))))
 
