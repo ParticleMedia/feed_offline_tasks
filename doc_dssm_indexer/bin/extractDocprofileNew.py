@@ -67,6 +67,11 @@ def profileJsonToTrainItem(doc_obj, filename = "", isExp = False, isFilter = Fal
     if ("local_score" in static_obj and float(static_obj["local_score"]) > 0.5) and ("geotag" in static_obj and len(static_obj["geotag"]) > 0):
         return "", {}
 
+    # Since we copied past data from general dssm at the start, news exist, so we filter news here.
+    # News should vanish as time past.
+    if static_obj.get('content_type') != 'native_video':
+        return "", {}
+
     # filtered if published 7 days ago and not nonnews
     if static_obj.get('epoch', 0) < int(time.time()) - 86400 * 7 and static_obj.get('is_news_score', 1.) > 0.5:
         return "", {}
