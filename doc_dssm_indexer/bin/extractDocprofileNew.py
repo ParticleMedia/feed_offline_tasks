@@ -72,8 +72,8 @@ def profileJsonToTrainItem(doc_obj, filename = "", isExp = False, isFilter = Fal
     if static_obj.get('content_type') != 'native_video':
         return "", {}
 
-    # filtered if published 7 days ago and not nonnews
-    if static_obj.get('epoch', 0) < int(time.time()) - 86400 * 7 and static_obj.get('is_news_score', 1.) > 0.5:
+    # filtered if published 3 days ago and not nonnews
+    if static_obj.get('epoch', 0) < int(time.time()) - 86400 * 3 and static_obj.get('is_news_score', 1.) > 0.5:
         return "", {}
 
     d_chns = tolower(static_obj["channels"]) if "channels" in static_obj else []
