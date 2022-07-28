@@ -66,6 +66,9 @@ function do_ctr() {
 
     local ctr_conf=${LOCAL_CONF_PATH}/category_ctr.conf
     ( export __CALC_DAYS__=${select_days} && export __CHECK_THRESHOLD__=${check_threshold} && export __CLICK_THRESHOLD__=${click_threshold} && run_mapred ${module_conf} ${ctr_conf} )
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
 
     if [ "x${WRITE_TO_UPS}" == "xTRUE" ]; then
         local data_dir=`export __CALC_DAYS__=${select_days} && export __CHECK_THRESHOLD__=${check_threshold} && export __CLICK_THRESHOLD__=${click_threshold} && local_output_of ${ctr_conf}`
