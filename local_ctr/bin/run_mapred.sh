@@ -201,7 +201,9 @@ function copy_to_local()
     local hdfs_path=$1
     local local_path=$2
     
-    rm -rf ${local_path}/* &>/dev/null
+    if [ -n "${local_path}" ]; then
+        rm -rf ${local_path}/* &>/dev/null
+    fi    
     mkdir -p ${local_path}
     ${HDFS_BIN} dfs -copyToLocal ${hdfs_path}/* ${local_path}
     return $?

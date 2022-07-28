@@ -84,7 +84,10 @@ function do_ctr() {
         fi
 
         local cat_hdfs_dir=`output_of ${category_ctr_conf}`
-        rm -rf ${cat_data_dir}; mkdir -p ${cat_data_dir}
+        if [ -n "${cat_data_dir}" ]; then
+            rm -rf ${cat_data_dir}
+        fi        
+        mkdir -p ${cat_data_dir}
         ${HDFS_BIN} dfs -copyToLocal ${cat_hdfs_dir}/part-* ${cat_data_dir}
         mv ${cat_data_dir}/part-00000 ${category_ctr_file}
         ret=$?
@@ -225,8 +228,12 @@ function process() {
 
 function cleanup() {
     if [ -n "${LOG_CLEANUP_DAY}" ]; then
-        find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \; &>/dev/null
-        find ${LOCAL_DATA_PATH}/ctr/ -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \; &>/dev/null
+        if [ -n "${LOCAL_LOG_PATH}" ]; then
+            find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \; &>/dev/null
+        fi
+        if [ -n "${LOCAL_DATA_PATH}" ]; then
+            find ${LOCAL_DATA_PATH}/ctr/ -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \; &>/dev/null
+        fi
 
         local cleanup_date=`date -d "${DATE_FLAG} -${LOG_CLEANUP_DAY} days" +%Y%m%d`
         ${HDFS_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/ctr/${cleanup_date} &>/dev/null

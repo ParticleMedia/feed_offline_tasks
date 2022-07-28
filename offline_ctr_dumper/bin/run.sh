@@ -360,6 +360,29 @@ function release_grouped_ctr_to_ares() {
     return ${ret}
 }
 
+function release_grouped_ctr_high_to_ares() {
+    local data_dir=$1
+    local postfix=$2
+    local drop=$3
+    local ret=0
+
+    local dest_file=grouped_ctr_high_${postfix}
+    if [ -n "${drop}" ]; then
+        dest_file=${dest_file}_d${drop}
+    fi
+
+    cat ${data_dir}/part-* | grep "^grp_high#doc#" >${data_dir}/${dest_file}.tmp
+    sed -i "s/^grp_high#doc#//g" ${data_dir}/${dest_file}.tmp
+    sed -i "s/#${postfix}//g" ${data_dir}/${dest_file}.tmp
+
+    /home/services/.local/bin/ares upload --key ${dest_file}.tmp --path ${data_dir}/${dest_file}.tmp
+    ret=$?
+    if [ ${ret} -ne  0 ]; then
+        return ${ret}
+    fi
+    return ${ret}
+}
+
 function grouped_ctr() {
     local module_conf=$1
     local select_hour=$2
@@ -393,6 +416,47 @@ function grouped_ctr() {
             local cat_dest_file=cat_grouped_ctr_${postfix}.txt
             local nfs_dest_dir=${NFS_FORYOU_PATH}
             cat ${ctr_dir}/part-* | grep -v "^grp#doc#" >${ctr_dir}/${cat_dest_file}.tmp
+            mkdir -p ${nfs_dest_dir}
+            mv ${ctr_dir}/${cat_dest_file}.tmp ${nfs_dest_dir}/${cat_dest_file}
+            ret=$?
+        fi
+    fi
+    return ${ret}
+}
+
+function grouped_ctr_high() {
+    local module_conf=$1
+    local select_hour=$2
+    local postfix=$3
+    local expire=$4
+    local drop=$5
+
+    local ctr_conf=${LOCAL_CONF_PATH}/grouped_ctr_high.conf
+    (export __SELECT_HOURS__=${select_hour}; export __POSTFIX__=${postfix}; export __DROP__=${drop}; run_mapred ${module_conf} ${ctr_conf})
+    ret=$?
+    if [ ${ret} -ne  0 ]; then
+        return ${ret}
+    fi
+
+    if [ "x"${WRITE_TO_REDIS} == "xTRUE" ]; then
+        local ctr_dir=`(export __SELECT_HOURS__=${select_hour}; export __POSTFIX__=${postfix}; export __DROP__=${drop}; local_output_of ${ctr_conf})`
+        write_to_redis ${ctr_dir} ${expire}
+        ret=$?
+        if [ ${ret} -ne  0 ]; then
+            return ${ret}
+        fi
+
+        release_grouped_ctr_high_to_ares ${ctr_dir} ${postfix} ${drop}
+        ret=$?
+        if [ ${ret} -ne  0 ]; then
+            return ${ret}
+        fi
+
+        if [ "0"${drop} -eq 0 ]; then
+            # category ctrs
+            local cat_dest_file=cat_grouped_ctr_high_${postfix}.txt
+            local nfs_dest_dir=${NFS_FORYOU_PATH}
+            cat ${ctr_dir}/part-* | grep -v "^grp_high#doc#" >${ctr_dir}/${cat_dest_file}.tmp
             mkdir -p ${nfs_dest_dir}
             mv ${ctr_dir}/${cat_dest_file}.tmp ${nfs_dest_dir}/${cat_dest_file}
             ret=$?
@@ -491,7 +555,9 @@ function chn_clustered_ctr() {
         fi
 
         cp -f ${local_top_chn_file} ${nfs_dir}
-        rm -f ${tmp_file_path} &>/dev/null
+        if [ -n "${tmp_file_path}" ]; then
+            rm -f ${tmp_file_path} &>/dev/null
+        fi        
         ret=$?
     fi
     return ${ret}
@@ -531,7 +597,7 @@ function process() {
     #zip_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/zip_nl_topdoc_1d.log.${timestamp} &
     city_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_topdoc_1d.log.${timestamp} &
     #dma_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/dma_nl_topdoc_1d.log.${timestamp} &
-    state_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_topdoc_1d.log.${timestamp} &        
+    state_nl_topdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_topdoc_1d.log.${timestamp} &
     #city_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/city_nl_hotdoc_1d.log.${timestamp} &
     #state_nl_hotdoc ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/state_nl_hotdoc_1d.log.${timestamp} &
 
@@ -541,7 +607,7 @@ function process() {
         nonnews_category_cfb_topdoc_v2 ${module_conf} 24 1d 86400 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_v2_1d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 3 == 1)); then
         nonnews_chn_cfb_topdoc ${module_conf} 24 1d 86400 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_1d.log.${timestamp} &
-        nonnews_chn_cfb_topdoc_v2 ${module_conf} 24 1d 86400 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_v2_1d.log.${timestamp} &    
+        nonnews_chn_cfb_topdoc_v2 ${module_conf} 24 1d 86400 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_v2_1d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 3 == 2)); then
         nonnews_user_cluster_topdoc ${module_conf} 24 1d 86400 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_1d.log.${timestamp} &
         nonnews_user_cluster_topdoc_v2 ${module_conf} 24 1d 86400 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_v2_1d.log.${timestamp} &
@@ -551,6 +617,7 @@ function process() {
     category_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/cat_ctr_1d.log.${timestamp} &
     local_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/local_ctr_1d.log.${timestamp} &
     grouped_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/grouped_ctr_1d.log.${timestamp} &
+    grouped_ctr_high ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/grouped_ctr_high_1d.log.${timestamp} &
     clustered_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/clustered_ctr_1d.log.${timestamp} &
     tab_ctr ${module_conf} 24 1d 7200 &>${LOCAL_LOG_PATH}/tab_ctr_1d.log.${timestamp} &
 
@@ -564,6 +631,7 @@ function process() {
         category_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/cat_ctr_3d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 3 == 1)); then
         grouped_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/grouped_ctr_3d.log.${timestamp} &
+        grouped_ctr_high ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/grouped_ctr_high_3d.log.${timestamp} &
         #local_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/local_ctr_3d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 3 == 2)); then
         clustered_ctr ${module_conf} 72 3d 21600 &>${LOCAL_LOG_PATH}/clustered_ctr_3d.log.${timestamp} &
@@ -592,19 +660,22 @@ function process() {
     # ctr for 30d
     if ((10#${HOUR_FLAG} % 24 == 2)); then
         nonnews_user_cluster_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_30d.log.${timestamp} &
+        nonnews_user_cluster_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_v2_30d.log.${timestamp} &
+        nonnews_chn_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_v2_30d.log.${timestamp} &
+        nonnews_category_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_v2_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 3)); then
         nonnews_chn_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 4)); then
         nonnews_category_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
     fi
-    
-    if ((10#${HOUR_FLAG} % 24 == 12)); then
-        nonnews_user_cluster_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_v2_30d.log.${timestamp} &
-    elif ((10#${HOUR_FLAG} % 24 == 13)); then
-        nonnews_chn_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_v2_30d.log.${timestamp} &
-    elif ((10#${HOUR_FLAG} % 24 == 14)); then
-        nonnews_category_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_v2_30d.log.${timestamp} &
-    fi
+
+    # if ((10#${HOUR_FLAG} % 24 == 12)); then
+    #     nonnews_user_cluster_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_v2_30d.log.${timestamp} &
+    # elif ((10#${HOUR_FLAG} % 24 == 13)); then
+    #     nonnews_chn_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_v2_30d.log.${timestamp} &
+    # elif ((10#${HOUR_FLAG} % 24 == 14)); then
+    #     nonnews_category_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_v2_30d.log.${timestamp} &
+    # fi
 
     for pid in $(jobs -p); do
         wait ${pid} &>/dev/null
@@ -621,7 +692,9 @@ function process() {
 }
 
 function cleanup() {
-    find ${LOCAL_LOG_PATH}/ -type f -mtime +1 -exec rm -f {} \; &>/dev/null
+    if [ -n "${LOCAL_LOG_PATH}" ]; then
+        find ${LOCAL_LOG_PATH}/ -type f -mtime +1 -exec rm -f {} \; &>/dev/null
+    fi    
     for file in `ls ${LOCAL_DATA_PATH}`; do
         local clean_path="${LOCAL_DATA_PATH}/${file}"
         if [ -d ${clean_path} ]; then

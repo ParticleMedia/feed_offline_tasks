@@ -62,7 +62,9 @@ function copy_tf_to_local() {
     fi
 
     mkdir -p ${local_path}
-    rm -f ${local_path}/* &>/dev/null
+    if [ -n "${local_path}" ]; then
+        rm -rf ${local_path}/* &>/dev/null
+    fi    
     ${HADOOP_BIN} dfs -copyToLocal ${remote_path}/* ${local_path}
     if [ $? -ne 0 ]; then
         return 1
@@ -109,8 +111,13 @@ function do_tfidf() {
     cat ${tf_local_dir}/part-* | python ${LOCAL_BIN_PATH}/tfidf_brief.py ${total_key_cnt} ${cate_key_cnt_file} 1>${output_dir}/${out_filename}
     cat ${output_dir}/${out_filename} | python ${LOCAL_BIN_PATH}/tfidf_percentile.py 20 1>${output_dir}/${out_filename}.percentile
 
-    rm -rf ${tf_local_dir}
-    rm -rf `dirname ${cate_key_cnt_file}`
+    if [ "${tf_local_dir}" != "/" ]; then
+        rm -rf ${tf_local_dir}
+    fi
+    local cate_key_cnt_dir=`dirname ${cate_key_cnt_file}`
+    if [ "${cate_key_cnt_dir}" != "/" ]; then
+        rm -rf ${cate_key_cnt_dir}
+    fi
     ${HADOOP_BIN} dfs -rmr -skipTrash ${tf_remote_dir}
 }
 
@@ -183,7 +190,11 @@ if [ ${ret} -ne 0 ]; then
 fi
 
 if [ -n "${LOG_CLEANUP_DAY}" ]; then
-    find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \;
-    find ${LOCAL_DATA_PATH}/tfidf/ -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \;
+    if [ -n "${LOCAL_LOG_PATH}" ]; then
+        find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \;
+    fi
+    if [ -n "${LOCAL_DATA_PATH}" ]; then
+        find ${LOCAL_DATA_PATH}/tfidf/ -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \;
+    fi
 fi
 exit ${ret}

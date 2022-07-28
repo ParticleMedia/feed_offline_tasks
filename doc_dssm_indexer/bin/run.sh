@@ -57,7 +57,9 @@ function post_body() {
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
 
     mkdir -p ${index_dir}
-    rm -rf ${index_dir}/*
+    if [ -n "${index_dir}" ]; then
+        rm -rf ${index_dir}/*
+    fi    
     #python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file} ${postbody_exp_file} ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
     python ${LOCAL_BIN_PATH}/extractDocprofileNew.py ${postbody_file_filter} ${postbody_exp_file_filter} ${docprofile_dir}
 }
@@ -157,7 +159,9 @@ function select_docs() {
     done
 
     mkdir -p ${docid_dir}
-    rm -rf ${docid_dir}/*
+    if [ -n "${docid_dir}" ]; then
+        rm -rf ${docid_dir}/*
+    fi    
     local all_docid_file=${docid_dir}/all_docids.txt
     cat ${file_list} | awk -F "\t" '{print $1}' | sort | uniq >${all_docid_file}
 }
@@ -168,7 +172,9 @@ function get_docprofiles() {
     local split_docid_file=${docid_dir}/split_docids_
     local docprofile_dir=${LOCAL_DATA_PATH}/docprofiles/${DATE_FLAG}${HOUR_FLAG}
     mkdir -p ${docprofile_dir}
-    rm -rf ${docprofile_dir}/*
+    if [ -n "${docprofile_dir}" ]; then
+        rm -rf ${docprofile_dir}/*
+    fi    
     split -l 30000 ${all_docid_file} ${split_docid_file}
 
     for docid_file in ${split_docid_file}*; do
@@ -298,10 +304,14 @@ if [ ${ret} -ne 0 ]; then
 fi
 
 if [ -n "${LOG_CLEANUP_DATE}" -a -n "${LOG_CLEANUP_HOUR}" ]; then
-    rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR}* &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/index/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/docprofiles/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    if [ -n "${LOCAL_LOG_PATH}" ]; then    
+        rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR}* &>/dev/null
+    fi
+    if [ -n "${LOCAL_DATA_PATH}" ]; then
+        rm -rf ${LOCAL_DATA_PATH}/index/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+        rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+        rm -rf ${LOCAL_DATA_PATH}/docprofiles/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    fi
     #${HADOOP_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/*/${LOG_CLEANUP_DATE}/${LOG_CLEANUP_HOUR} &>/dev/null
 fi
 exit ${ret}

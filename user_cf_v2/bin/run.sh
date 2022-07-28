@@ -63,7 +63,9 @@ function build_annoy() {
     local hdfs_dir=`output_of ${user_embedding_conf}`
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}
     local tmp_dir=${LOCAL_DATA_PATH}/user_embedding/${DATE_FLAG}
-    rm -rf ${tmp_dir}
+    if [ -n "${tmp_dir}" ]; then
+        rm -rf ${tmp_dir}
+    fi    
     mkdir -p ${tmp_dir}
     ${HADOOP_BIN} dfs -copyToLocal ${hdfs_dir}/part-* ${tmp_dir}
     ret=$?
@@ -140,7 +142,11 @@ if [ ${ret} -ne 0 ]; then
 fi
 
 if [ -n "${LOG_CLEANUP_DATE}" ]; then
-    rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/cluster/${LOG_CLEANUP_DATE} &>/dev/null
+    if [ -n "${LOCAL_LOG_PATH}" ]; then
+        rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
+    fi
+    if [ -n "${LOCAL_DATA_PATH}" ]; then
+        rm -rf ${LOCAL_DATA_PATH}/cluster/${LOG_CLEANUP_DATE} &>/dev/null
+    fi
 fi
 exit ${ret}

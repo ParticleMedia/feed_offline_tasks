@@ -69,7 +69,10 @@ function do_cluster() {
     local ret=0
     local hdfs_embedding_dir=$1
     local local_embedding_dir=${LOCAL_DATA_PATH}/embedding/${DATE_FLAG}
-    mkdir -p ${local_embedding_dir}; rm -rf ${local_embedding_dir}/* &>/dev/null
+    mkdir -p ${local_embedding_dir}
+    if [ -n "${local_embedding_dir}" ]; then
+        rm -rf ${local_embedding_dir}/* &>/dev/null
+    fi    
     ${HDFS_BIN} dfs -copyToLocal ${hdfs_embedding_dir}/part-* ${local_embedding_dir}
     ret=$?
     if [ ${ret} -ne 0 ]; then
@@ -77,7 +80,10 @@ function do_cluster() {
     fi
 
     local local_cluster_dir=${LOCAL_DATA_PATH}/cluster/${DATE_FLAG}
-    mkdir -p ${local_cluster_dir}; rm -rf ${local_cluster_dir}/* &>/dev/null
+    mkdir -p ${local_cluster_dir}
+    if [ -n "${local_cluster_dir}" ]; then
+        rm -rf ${local_cluster_dir}/* &>/dev/null
+    fi
     cat ${local_embedding_dir}/part-* | ${LOCAL_BIN_PATH}/user_cluster -min-total-click=10 -cluster-count=300 -dimension=50 -iteration=300 -try=2 -sample=30 >${local_cluster_dir}/user_cluster_300.txt
     ret=$?
     if [ ${ret} -ne 0 ]; then
@@ -141,9 +147,13 @@ function process() {
 
 function cleanup() {
     if [ -n "${LOG_CLEANUP_DAY}" ]; then
-        find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \; &>/dev/null
-        find ${LOCAL_DATA_PATH}/embedding -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \; &>/dev/null
-        find ${LOCAL_DATA_PATH}/cluster -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \; &>/dev/null
+        if [ -n "${LOCAL_LOG_PATH}" ]; then
+            find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \; &>/dev/null
+        fi
+        if [ -n "${LOCAL_DATA_PATH}" ]; then        
+            find ${LOCAL_DATA_PATH}/embedding -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \; &>/dev/null
+            find ${LOCAL_DATA_PATH}/cluster -type d -mtime +${LOG_CLEANUP_DAY} -exec rm -rf {} \; &>/dev/null
+        fi
 
         local cleanup_date=`date -d "${DATE_FLAG} -${LOG_CLEANUP_DAY} days" +%Y%m%d`
         ${HDFS_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/*/${cleanup_date} &>/dev/null

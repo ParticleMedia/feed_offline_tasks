@@ -126,8 +126,12 @@ if [ ${ret} -ne 0 ]; then
 fi
 
 if [ -n "${LOG_CLEANUP_DATE}" ]; then
-    rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/*/${LOG_CLEANUP_DATE} &>/dev/null
+    if [ -n "${LOCAL_LOG_PATH}" ]; then
+        rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
+    fi
+    if [ -n "${LOCAL_DATA_PATH}" ]; then
+        rm -rf ${LOCAL_DATA_PATH}/*/${LOG_CLEANUP_DATE} &>/dev/null
+    fi
     ${HADOOP_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/cjv/${CJV_CLEANUP_DATE} &>/dev/null
 fi
 exit ${ret}

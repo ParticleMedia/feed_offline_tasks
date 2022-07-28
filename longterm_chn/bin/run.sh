@@ -62,7 +62,9 @@ function copy_tf_to_local() {
     fi
 
     mkdir -p ${local_path}
-    rm -f ${local_path}/* &>/dev/null
+    if [ -n "${local_path}" ]; then
+        rm -rf ${local_path}/* &>/dev/null
+    fi    
     ${HADOOP_BIN} dfs -copyToLocal ${remote_path}/* ${local_path}
     if [ $? -ne 0 ]; then
         return 1
@@ -79,7 +81,10 @@ function do_tfidf() {
 
     local idf_file=${out_filename}.idf
     local output_dir=${LOCAL_DATA_PATH}/tfidf/${DATE_FLAG}
-    mkdir -p ${output_dir}; rm -f ${output_dir}/* &>/dev/null
+    mkdir -p ${output_dir}
+    if [ -n "${output_dir}" ]; then
+        rm -f ${output_dir}/* &>/dev/null
+    fi
 
     local tf_conf=${LOCAL_CONF_PATH}/key_category_tf.conf 
     (export __KEY__=${key} && export __CALC_DAYS__=${calc_days} && export __CLICK_THRESHOLD__=${click_threshold} && run_mapred ${module_conf_file} ${tf_conf})
@@ -117,8 +122,13 @@ function do_tfidf() {
     ${HDFS_BIN} dfs -rmr -skipTrash ${hdfs_dest_dir}/${out_filename}
     ${HDFS_BIN} dfs -copyFromLocal ${output_dir}/${out_filename} ${hdfs_dest_dir}/${out_filename}
 
-    rm -rf ${tf_local_dir}
-    rm -rf `dirname ${cate_key_cnt_file}`
+    if [ "${tf_local_dir}" != "/" ]; then
+        rm -rf ${tf_local_dir}
+    fi
+    local cate_key_cnt_dir=`dirname ${cate_key_cnt_file}`
+    if [ "${cate_key_cnt_dir}" != "/" ]; then
+        rm -rf ${cate_key_cnt_dir}
+    fi
     ${HDFS_BIN} dfs -rmr -skipTrash ${tf_remote_dir}
 }
 
@@ -203,8 +213,12 @@ if [ ${ret} -ne 0 ]; then
 fi
 
 if [ -n "${LOG_CLEANUP_DATE}" ]; then
-    rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/tfidf/${LOG_CLEANUP_DATE} &>/dev/null
+    if [ -n "${LOCAL_LOG_PATH}" ]; then
+        rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
+    fi
+    if [ -n "${LOCAL_DATA_PATH}" ]; then
+        rm -rf ${LOCAL_DATA_PATH}/tfidf/${LOG_CLEANUP_DATE} &>/dev/null
+    fi
     ${HDFS_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/*_tfidf_*/${LOG_CLEANUP_DATE} &>/dev/null
 fi
 exit ${ret}

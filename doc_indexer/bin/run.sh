@@ -84,7 +84,9 @@ function select_docs() {
     done
 
     mkdir -p ${out_dir}
-    rm -rf ${out_dir}/*
+    if [ -n "${out_dir}" ]; then
+        rm -rf ${out_dir}/*
+    fi
     local embedding_file=${out_dir}/embedding
     cat ${file_list} | sort | python ${LOCAL_BIN_PATH}/merge_doc.py >${embedding_file}
 }
@@ -167,9 +169,13 @@ if [ ${ret} -ne 0 ]; then
 fi
 
 if [ -n "${LOG_CLEANUP_DATE}" -a -n "${LOG_CLEANUP_HOUR}" ]; then
-    rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR}* &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/index/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    if [ -n "${LOCAL_LOG_PATH}" ]; then
+        rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR}* &>/dev/null
+    fi
+    if [ -n "${LOCAL_DATA_PATH}" ]; then
+        rm -rf ${LOCAL_DATA_PATH}/index/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+        rm -rf ${LOCAL_DATA_PATH}/docs/${LOG_CLEANUP_DATE}${LOG_CLEANUP_HOUR} &>/dev/null
+    fi
     #${HADOOP_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/*/${LOG_CLEANUP_DATE}/${LOG_CLEANUP_HOUR} &>/dev/null
 fi
 exit ${ret}

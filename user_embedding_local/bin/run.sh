@@ -117,7 +117,11 @@ if [ ${ret} -ne 0 ]; then
 fi
 
 if [ -n "${LOG_CLEANUP_DATE}" ]; then
-    rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
-    rm -rf ${LOCAL_DATA_PATH}/cluster/${LOG_CLEANUP_DATE} &>/dev/null
+    if [ -n "${LOCAL_LOG_PATH}" ]; then
+        rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
+    fi
+    if [ -n "${LOCAL_DATA_PATH}" ]; then
+        rm -rf ${LOCAL_DATA_PATH}/cluster/${LOG_CLEANUP_DATE} &>/dev/null
+    fi
 fi
 exit ${ret}

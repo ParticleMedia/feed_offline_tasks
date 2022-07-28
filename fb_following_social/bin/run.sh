@@ -115,7 +115,9 @@ function process() {
 
 function cleanup() {
     if [ -n "${LOG_CLEANUP_DAY}" ]; then
-        find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \; &>/dev/null
+        if [ -n "${LOCAL_LOG_PATH}" ]; then
+            find ${LOCAL_LOG_PATH}/ -type f -mtime +${LOG_CLEANUP_DAY} -exec rm -f {} \; &>/dev/null
+        fi
 
         local cleanup_date=`date -d "${DATE_FLAG} -${LOG_CLEANUP_DAY} days" +%Y%m%d`
         ${HDFS_BIN} dfs -rmr -skipTrash ${HDFS_WORK_PATH}/normalize/${cleanup_date} &>/dev/null
