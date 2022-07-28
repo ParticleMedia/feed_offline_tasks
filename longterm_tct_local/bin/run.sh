@@ -195,7 +195,7 @@ if [ -n "${LOG_CLEANUP_DATE}" ]; then
         rm -f ${LOCAL_LOG_PATH}/*.log.${LOG_CLEANUP_DATE}* &>/dev/null
     fi
     if [ -n "${LOCAL_DATA_PATH}" ]; then
-        rm -rf ${LOCAL_DATA_PATH}/ctr_*/${LOG_CLEANUP_DATE} &>/dev/null
+        rm -rf ${LOCAL_DATA_PATH}/tfidf/${LOG_CLEANUP_DATE} &>/dev/null
     fi
 fi
 exit ${ret}

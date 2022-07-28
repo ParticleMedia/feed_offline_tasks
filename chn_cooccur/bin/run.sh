@@ -84,7 +84,7 @@ function do_ctr() {
         fi
 
         local cat_hdfs_dir=`output_of ${category_ctr_conf}`
-        if [ -n "${cat_data_dir}" ]; then
+        if [ "${cat_data_dir}" != "/" ]; then
             rm -rf ${cat_data_dir}
         fi
         mkdir -p ${cat_data_dir}

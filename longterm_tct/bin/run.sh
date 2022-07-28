@@ -63,7 +63,7 @@ function copy_tf_to_local() {
 
     mkdir -p ${local_path}
     if [ -n "${local_path}" ]; then
-        rm -rf ${local_path}/* &>/dev/null
+        rm -f ${local_path}/* &>/dev/null
     fi
     ${HADOOP_BIN} dfs -copyToLocal ${remote_path}/* ${local_path}
     if [ $? -ne 0 ]; then

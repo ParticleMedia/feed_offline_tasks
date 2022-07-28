@@ -63,7 +63,7 @@ function build_annoy() {
     local hdfs_dir=`output_of ${user_embedding_conf}`
     local index_dir=${LOCAL_DATA_PATH}/index/${DATE_FLAG}
     local tmp_dir=${LOCAL_DATA_PATH}/user_embedding/${DATE_FLAG}
-    if [ -n "${tmp_dir}" ]; then
+    if [ "${tmp_dir}" != "/" ]; then
         rm -rf ${tmp_dir}
     fi    
     mkdir -p ${tmp_dir}
