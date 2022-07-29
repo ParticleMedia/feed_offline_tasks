@@ -661,12 +661,12 @@ function process() {
     if ((10#${HOUR_FLAG} % 24 == 2)); then
         nonnews_user_cluster_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_30d.log.${timestamp} &
         nonnews_user_cluster_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_user_cluster_topdoc_v2_30d.log.${timestamp} &
-        nonnews_chn_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_v2_30d.log.${timestamp} &
-        nonnews_category_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_v2_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 3)); then
         nonnews_chn_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_30d.log.${timestamp} &
+        nonnews_chn_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_chn_cfb_topdoc_v2_30d.log.${timestamp} &
     elif ((10#${HOUR_FLAG} % 24 == 4)); then
         nonnews_category_cfb_topdoc ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_30d.log.${timestamp} &
+        nonnews_category_cfb_topdoc_v2 ${module_conf} 720 30d 259200 &>${LOCAL_LOG_PATH}/nonnews_cat_cfb_topdoc_v2_30d.log.${timestamp} &
     fi
 
     # if ((10#${HOUR_FLAG} % 24 == 12)); then
