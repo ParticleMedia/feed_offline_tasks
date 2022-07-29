@@ -69,7 +69,7 @@ function fetch_embedding() {
     local postbody_file=${index_dir}/postbody_filter.txt
     local postbody_exp_file=${index_dir}/postbody_exp_filter.txt
     local nfs_tf_dir=/mnt/models/kerasmodels
-    # cat ${postbody_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding.txt --user_version_path=${nfs_tf_dir}/userv2_current_version --doc_version_path=${nfs_tf_dir}/docv2_current_version --error_rate_path=${index_dir}/error_rate.txt
+    cat ${postbody_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding.txt --user_version_path=${nfs_tf_dir}/userv2_current_version --doc_version_path=${nfs_tf_dir}/docv2_current_version --error_rate_path=${index_dir}/error_rate.txt
     cat ${postbody_exp_file} | ${LOCAL_BIN_PATH}/embeder --embedding_path=${index_dir}/embedding_exp.txt --user_version_path=${nfs_tf_dir}/mindexpuser_current_version --doc_version_path=${nfs_tf_dir}/mindexpdoc_current_version --error_rate_path=${index_dir}/error_rate_exp.txt --is_exp=true
 
     ret=$?
@@ -86,8 +86,8 @@ function flush_nfs() {
     # add on 20211111, for dssm-i2i exp
     cp ${index_dir}/docs.map ${nfs_foryou_dir}/dssm_docs.map
     cp ${index_dir}/docs_exp.map ${nfs_foryou_dir}/dssm_docs_exp.map
-    # cp ${nfs_tf_dir}/docv2_current_version ${nfs_tf_dir}/userv2_current_version
-    # cp ${nfs_tf_dir}/docv2_current_version ${index_dir}/docv2_current_version
+    cp ${nfs_tf_dir}/docv2_current_version ${nfs_tf_dir}/userv2_current_version
+    cp ${nfs_tf_dir}/docv2_current_version ${index_dir}/docv2_current_version
     cp ${nfs_tf_dir}/mindexpdoc_current_version ${nfs_tf_dir}/mindexpuser_current_version
     cp ${nfs_tf_dir}/mindexpdoc_current_version ${index_dir}/mindexpdoc_current_version
 
